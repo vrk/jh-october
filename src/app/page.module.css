@@ -1,11 +1,13 @@
 .page {
   --gray-rgb: 0, 0, 0;
 
-}
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  grid-row-start: 2;
+  margin: 3em;
 }
 
+.main hr {
+  margin: 2em 0;
+}
+
+.main h1 {
+  margin: 1em 0;
+}

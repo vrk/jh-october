@@ -5,7 +5,6 @@ import Button from "@/components/Button";
 import { createNewJournal } from "@/helpers/indexdb";
 import { useRouter } from 'next/navigation';
 
-
 function CreateNewJournalButton() {
   const router = useRouter();
 
@@ -15,7 +14,7 @@ function CreateNewJournalButton() {
     router.push(`/journals/${result}`);
   };
   return <div>
-    <Button onClick={onCreateNewJournalClicked}>New Journal</Button>
+    <Button onClick={onCreateNewJournalClicked}>Create New Journal</Button>
   </div>;
 }
 

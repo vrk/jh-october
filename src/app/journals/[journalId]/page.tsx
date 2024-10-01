@@ -8,7 +8,7 @@ export default function JournalPage({
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        Journal Page
+        Journal Page for {params.journalId}
       </main>
     </div>
   );
