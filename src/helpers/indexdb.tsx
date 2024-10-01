@@ -1,11 +1,12 @@
 "use client";
+import ShortUniqueId from 'short-unique-id';
 
 const DATABASE_NAME = "OctoberJournalHelperDb";
 
 const JOURNALS_STORE_NAME = "journals";
 const RESOURCES_STORE_NAME = "resources";
 
-async function getDatabase(): Promise<IDBDatabase> {
+export async function getDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = window.indexedDB.open(DATABASE_NAME, 1 /** version */);
     request.onerror = (event) => {
@@ -28,7 +29,7 @@ async function getDatabase(): Promise<IDBDatabase> {
   });
 }
 
-async function getJournalById(id: string) {
+export async function getJournalById(id: string) {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(JOURNALS_STORE_NAME);
@@ -43,11 +44,14 @@ async function getJournalById(id: string) {
   });
 }
 
-async function createNewJournal(id: string) {
+export async function createNewJournal() {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
-    const transaction = db.transaction(JOURNALS_STORE_NAME);
+    const transaction = db.transaction(JOURNALS_STORE_NAME, 'readwrite');
     const objectStore = transaction.objectStore(JOURNALS_STORE_NAME);
+    const shortIDGenerator = new ShortUniqueId({ length: 10});
+    const id = shortIDGenerator.randomUUID();
+    
     const request = objectStore.add({ 
       id
     });
