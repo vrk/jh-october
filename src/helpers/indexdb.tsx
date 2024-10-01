@@ -29,16 +29,44 @@ export async function getDatabase(): Promise<IDBDatabase> {
   });
 }
 
+type Journal = {
+  id: string
+}
+
+export async function getAllJournals(id: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(JOURNALS_STORE_NAME);
+    const objectStore = transaction.objectStore(JOURNALS_STORE_NAME);
+    const request = objectStore.openCursor();
+    const journals: Array<Journal> = [];
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        console.log('hello', journals);
+        const journal = { id: cursor.value.id };
+        journals.push(journal);
+        cursor.continue();
+      } else {
+        resolve(journals);
+      }
+    };
+    request.onerror = () => {
+      reject('Could not get all journals');
+    }
+  });
+}
+
 export async function getJournalById(id: string) {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(JOURNALS_STORE_NAME);
     const objectStore = transaction.objectStore(JOURNALS_STORE_NAME);
     const request = objectStore.get(id);
-    request.onerror = (event) => {
+    request.onerror = () => {
       reject(`Requested journal ID is not found: ${id}`);
     };
-    request.onsuccess = (event) => {
+    request.onsuccess = () => {
       resolve(request.result);
     };
   });
@@ -55,10 +83,10 @@ export async function createNewJournal() {
     const request = objectStore.add({ 
       id
     });
-    request.onerror = (event) => {
+    request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };
-    request.onsuccess = (event) => {
+    request.onsuccess = () => {
       resolve(request.result);
     };
   });
