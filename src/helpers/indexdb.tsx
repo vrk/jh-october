@@ -43,7 +43,6 @@ export async function getAllJournals(id: string) {
     request.onsuccess = () => {
       const cursor = request.result;
       if (cursor) {
-        console.log('hello', journals);
         const journal = { id: cursor.value.id };
         journals.push(journal);
         cursor.continue();

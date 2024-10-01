@@ -8,16 +8,13 @@ function JournalList() {
 
   React.useEffect(() => {
     getAllJournals().then((journals) => {
-      console.log('all journals are', journals)
       setJournals([...journals]);
     });
   }, []);
 
-  console.log("RENDER", journals);
-
   return <div>
     {journals.map(journal =>
-        <Button key={journal.key} href={`/journals/${journal.id}`}>Journal {journal.id}</Button>
+        <Button key={journal.id} href={`/journals/${journal.id}`}>Journal {journal.id}</Button>
     )}
   </div>;
 }
