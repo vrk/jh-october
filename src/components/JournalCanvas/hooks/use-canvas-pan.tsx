@@ -5,25 +5,26 @@ import { zoomByDelta, panVerticallyByDelta } from "@/helpers/canvas-helpers";
 
 function useCanvasPan(
   fabricCanvas: Canvas | null,
-  documentRectangle: FabricImage | undefined
 ) {
   const [isSpacebarPressed, setIsSpacebarPressed] = React.useState(false);
-  const [lastScenePoint, setLastScenePoint] = React.useState<Point | null>(
-    null
-  );
   const [isDragging, setIsDragging] = React.useState(false);
   const [lastPosX, setLastPosX] = React.useState(0);
   const [lastPosY, setLastPosY] = React.useState(0);
   useHotkeys(" ", () => {
+    if (isSpacebarPressed) {return }
     setIsSpacebarPressed(true);
     console.log('is pressed');
-  }, [isSpacebarPressed], {
+    // TODO: Figure out why this doesn't work well
+    fabricCanvas?.setCursor("grab");
+  }, [isSpacebarPressed, fabricCanvas], {
     keydown: true,
     keyup: false,
   });
 
   useHotkeys(" ", () => {
     setIsSpacebarPressed(false);
+    fabricCanvas?.setCursor("default");
+    console.log('default');
   }, [isSpacebarPressed], {
     keyup: true,
     keydown: false,
@@ -38,14 +39,7 @@ function useCanvasPan(
       if (!fabricCanvas) {
         return;
       }
-      const scenePoint = fabricCanvas.getScenePoint(opt.e);
       if (!isDragging) {
-        if (isSpacebarPressed) {
-          fabricCanvas.setCursor("grab");
-          // console.log('grab');
-        } else {
-          fabricCanvas.setCursor("default");
-        }
         return;
       }
 
@@ -107,8 +101,6 @@ function useCanvasPan(
       }
 
       setIsDragging(false);
-      fabricCanvas.setCursor("default");
-          console.log('default');
       fabricCanvas.selection = true; // reenable selection after grab
     };
 
