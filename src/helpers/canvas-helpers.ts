@@ -53,3 +53,4 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
   fabricCanvas.setViewportTransform(viewportTransform);
   fabricCanvas.renderAll();
 }
+

@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 
 import { FabricImage, Canvas } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
@@ -9,10 +8,9 @@ import {
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
   setCenterFromObject,
-  zoomByDelta,
-  panVerticallyByDelta,
 } from "@/helpers/canvas-helpers";
 import style from "./journalcanvas.module.css";
+import useCanvasMousewheel from "./hooks/use-canvas-mousewheel";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -22,14 +20,6 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  const [isAltKeyPressed, setIsAltKeyPressed] = React.useState(false);
-  useHotkeys("meta", () => setIsAltKeyPressed(true), [isAltKeyPressed], {
-    keydown: true,
-  });
-  useHotkeys("meta", () => setIsAltKeyPressed(false), [isAltKeyPressed], {
-    keyup: true,
-  });
-
   console.log("rerender", fabricCanvas);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
@@ -39,6 +29,8 @@ function JournalCanvas() {
     React.useState<HTMLImageElement>();
   const [documentRectangle, setDocumentRectangle] =
     React.useState<FabricImage>();
+
+    useCanvasMousewheel(fabricCanvas);
 
   // Create the fabric canvas
   React.useEffect(() => {
@@ -102,27 +94,6 @@ function JournalCanvas() {
     };
   }, [fabricCanvas, overallContainer, documentRectangle]);
 
-  // Add mousewheel handler
-  React.useEffect(() => {
-    if (!fabricCanvas) {
-      return;
-    }
-
-    const onMouseWheel = (opt: any) => {
-      opt.e.preventDefault();
-      opt.e.stopPropagation();
-      const delta = opt.e.deltaY;
-      if (isAltKeyPressed) {
-        zoomByDelta(fabricCanvas, delta);
-      } else {
-        panVerticallyByDelta(fabricCanvas, delta);
-      }
-    };
-    fabricCanvas.on("mouse:wheel", onMouseWheel);
-    return () => {
-      fabricCanvas.off("mouse:wheel", onMouseWheel);
-    };
-  }, [fabricCanvas, isAltKeyPressed]);
 
   return (
     <div ref={overallContainer} className={style.container}>
