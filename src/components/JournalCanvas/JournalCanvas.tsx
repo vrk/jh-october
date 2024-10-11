@@ -7,11 +7,11 @@ import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
-  setCenterFromObject,
 } from "@/helpers/canvas-helpers";
 import style from "./journalcanvas.module.css";
 import useCanvasMousewheel from "./hooks/use-canvas-mousewheel";
 import useCenterOnResize from "./hooks/use-center-on-resize";
+import useCanvasPan from "./hooks/use-canvas-pan";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -21,7 +21,6 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  console.log("rerender", fabricCanvas);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
@@ -31,15 +30,16 @@ function JournalCanvas() {
   const [documentRectangle, setDocumentRectangle] =
     React.useState<FabricImage>();
 
-    useCanvasMousewheel(fabricCanvas);
-    useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
+  useCanvasMousewheel(fabricCanvas);
+  useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
+  useCanvasPan(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas
   React.useEffect(() => {
     if (!htmlCanvas.current || !overallContainer.current) {
       return;
     }
-
+ 
     console.log("vrk create canvas");
     const newlyMadeCanvas = new Canvas(htmlCanvas.current, {
       controlsAboveOverlay: true,

@@ -1,19 +1,32 @@
-import React from 'react';
-import { Canvas } from 'fabric';
+import React from "react";
+import { Canvas } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
-import {
-  zoomByDelta,
-  panVerticallyByDelta,
-} from "@/helpers/canvas-helpers";
+import { zoomByDelta, panVerticallyByDelta } from "@/helpers/canvas-helpers";
 
-function useCanvasMousewheel(fabricCanvas: Canvas| null) {
+function useCanvasMousewheel(fabricCanvas: Canvas | null) {
   const [isAltKeyPressed, setIsAltKeyPressed] = React.useState(false);
-  useHotkeys("meta", () => setIsAltKeyPressed(true), [isAltKeyPressed], {
-    keydown: true,
-  });
-  useHotkeys("meta", () => setIsAltKeyPressed(false), [isAltKeyPressed], {
-    keyup: true,
-  });
+  useHotkeys(
+    "meta",
+    () => {
+      setIsAltKeyPressed(true);
+      // console.log("down");
+    },
+    [isAltKeyPressed],
+    {
+      keydown: true,
+    }
+  );
+  useHotkeys(
+    "meta",
+    () => {
+      setIsAltKeyPressed(false);
+      // console.log("up");
+    },
+    [isAltKeyPressed],
+    {
+      keyup: true,
+    }
+  );
 
   // Add mousewheel handler
   React.useEffect(() => {
