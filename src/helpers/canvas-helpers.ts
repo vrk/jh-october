@@ -20,6 +20,24 @@ export function zoomToFitDocument(fabricCanvas: Canvas, documentRectangle: Fabri
   fabricCanvas.requestRenderAll();
 }
 
+export function zoomByDelta(canvas: Canvas, delta: number) {
+  let zoom = canvas.getZoom();
+  zoom *= 0.999 ** delta;
+  if (zoom > 2) zoom = 2;
+  if (zoom < 0.1) zoom = 0.1;
+  const center = canvas.getCenterPoint();
+  canvas.zoomToPoint(center, zoom);
+  canvas.requestRenderAll();
+}
+
+export function panVerticallyByDelta(canvas: Canvas, delta: number) {
+  const vpt = canvas.viewportTransform;
+  vpt[5] -= delta;
+  canvas.setViewportTransform(vpt);
+  // enclose(canvas, documentRectangle);
+  canvas.requestRenderAll();
+}
+
 export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
   const objCenter = obj.getCenterPoint();
   const viewportTransform = fabricCanvas.viewportTransform;

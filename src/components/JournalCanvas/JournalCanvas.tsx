@@ -1,12 +1,16 @@
 "use client";
 import React from "react";
+import { useHotkeys } from "react-hotkeys-hook";
+
 import { FabricImage, Canvas } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
-  setCenterFromObject
+  setCenterFromObject,
+  zoomByDelta,
+  panVerticallyByDelta,
 } from "@/helpers/canvas-helpers";
 import style from "./journalcanvas.module.css";
 
@@ -18,7 +22,15 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  console.log('rerender', fabricCanvas);
+  const [isAltKeyPressed, setIsAltKeyPressed] = React.useState(false);
+  useHotkeys("meta", () => setIsAltKeyPressed(true), [isAltKeyPressed], {
+    keydown: true,
+  });
+  useHotkeys("meta", () => setIsAltKeyPressed(false), [isAltKeyPressed], {
+    keyup: true,
+  });
+
+  console.log("rerender", fabricCanvas);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
@@ -77,16 +89,40 @@ function JournalCanvas() {
   // Add resize handler
   React.useEffect(() => {
     const onWindowResize = () => {
-      if (!fabricCanvas || !overallContainer.current || !documentRectangle) { return };
+      if (!fabricCanvas || !overallContainer.current || !documentRectangle) {
+        return;
+      }
       setCanvasDimensionsToWindowSize(fabricCanvas, overallContainer.current);
       setCenterFromObject(fabricCanvas, documentRectangle);
-    }
+    };
     window.addEventListener("resize", onWindowResize);
 
     return () => {
       window.removeEventListener("resize", onWindowResize);
-    }
+    };
   }, [fabricCanvas, overallContainer, documentRectangle]);
+
+  // Add mousewheel handler
+  React.useEffect(() => {
+    if (!fabricCanvas) {
+      return;
+    }
+
+    const onMouseWheel = (opt: any) => {
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+      const delta = opt.e.deltaY;
+      if (isAltKeyPressed) {
+        zoomByDelta(fabricCanvas, delta);
+      } else {
+        panVerticallyByDelta(fabricCanvas, delta);
+      }
+    };
+    fabricCanvas.on("mouse:wheel", onMouseWheel);
+    return () => {
+      fabricCanvas.off("mouse:wheel", onMouseWheel);
+    };
+  }, [fabricCanvas, isAltKeyPressed]);
 
   return (
     <div ref={overallContainer} className={style.container}>

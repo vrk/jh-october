@@ -13,6 +13,7 @@
     "next": "14.2.14",
     "react": "^18",
     "react-dom": "^18",
+    "react-hotkeys-hook": "^4.5.1",
     "short-unique-id": "^5.2.0"
   },
   "devDependencies": {
