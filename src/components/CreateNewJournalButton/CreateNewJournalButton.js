@@ -10,7 +10,6 @@ function CreateNewJournalButton() {
 
   const onCreateNewJournalClicked = async () => {
     const result = await createNewJournal();
-    console.log('new journal created', result);
     router.push(`/journals/${result}`);
   };
   return <div>

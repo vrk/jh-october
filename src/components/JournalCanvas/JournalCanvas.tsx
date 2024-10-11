@@ -1,8 +1,13 @@
 "use client";
 import React from "react";
-import { FabricImage, FabricObject, Canvas, Rect, util } from "fabric";
+import { FabricImage, Canvas } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
+import {
+  setCanvasDimensionsToWindowSize,
+  zoomToFitDocument,
+  setCenterFromObject
+} from "@/helpers/canvas-helpers";
 import style from "./journalcanvas.module.css";
 
 const DEFAULT_PPI = 300;
@@ -13,6 +18,7 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
+  console.log('rerender', fabricCanvas);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
@@ -28,6 +34,7 @@ function JournalCanvas() {
       return;
     }
 
+    console.log("vrk create canvas");
     const newlyMadeCanvas = new Canvas(htmlCanvas.current, {
       controlsAboveOverlay: true,
       renderOnAddRemove: false,
@@ -35,14 +42,10 @@ function JournalCanvas() {
 
     initCanvas(newlyMadeCanvas);
 
-    setCanvasDimensionsToWindowSize(
-      newlyMadeCanvas,
-      overallContainer.current
-    );
-
+    setCanvasDimensionsToWindowSize(newlyMadeCanvas, overallContainer.current);
 
     return () => {
-      console.log('vrk dispose canvas')
+      console.log("vrk dispose canvas");
       newlyMadeCanvas.dispose();
     };
   }, [overallContainer, htmlCanvas]);
@@ -50,7 +53,6 @@ function JournalCanvas() {
   // // Load Cousin Image
   React.useEffect(() => {
     loadCousinImage().then((cousinHtmlImage) => {
-      console.log("setting");
       setCousinHtmlImage(cousinHtmlImage);
     });
   }, []);
@@ -58,7 +60,7 @@ function JournalCanvas() {
   // Add Cousin Image to Fabric Canvas
   React.useEffect(() => {
     if (fabricCanvas && cousinHtmlImage) {
-      const rectangle = createBackgroundImage(cousinHtmlImage);
+      const rectangle = createFabricImageForCousin(cousinHtmlImage);
       fabricCanvas.add(rectangle);
       fabricCanvas.centerObject(rectangle);
       setDocumentRectangle(rectangle);
@@ -72,6 +74,20 @@ function JournalCanvas() {
     };
   }, [cousinHtmlImage, fabricCanvas]);
 
+  // Add resize handler
+  React.useEffect(() => {
+    const onWindowResize = () => {
+      if (!fabricCanvas || !overallContainer.current || !documentRectangle) { return };
+      setCanvasDimensionsToWindowSize(fabricCanvas, overallContainer.current);
+      setCenterFromObject(fabricCanvas, documentRectangle);
+    }
+    window.addEventListener("resize", onWindowResize);
+
+    return () => {
+      window.removeEventListener("resize", onWindowResize);
+    }
+  }, [fabricCanvas, overallContainer, documentRectangle]);
+
   return (
     <div ref={overallContainer} className={style.container}>
       <canvas ref={htmlCanvas}></canvas>
@@ -79,7 +95,7 @@ function JournalCanvas() {
   );
 }
 
-function createBackgroundImage(backgroundImage: HTMLImageElement) {
+function createFabricImageForCousin(backgroundImage: HTMLImageElement) {
   return new FabricImage(backgroundImage, {
     stroke: "#4B624C",
     strokeWidth: 0,
@@ -99,42 +115,6 @@ async function loadCousinImage(): Promise<HTMLImageElement> {
       resolve(image);
     });
   });
-}
-
-function setCanvasDimensionsToWindowSize(
-  canvas: Canvas,
-  overallContainer: HTMLDivElement
-) {
-  console.log('setting dimensions')
-  canvas.setDimensions({
-    width: overallContainer.offsetWidth,
-    height: overallContainer.offsetHeight,
-  });
-  canvas.requestRenderAll();
-}
-
-function zoomToFitDocument(fabricCanvas: Canvas, documentRectangle: FabricObject) {
-  const center = fabricCanvas.getCenterPoint();
-  const scale = util.findScaleToFit(documentRectangle, fabricCanvas) * 0.9; // TODO: fix eyeballing
-  fabricCanvas.zoomToPoint(center, scale);
-  setCenterFromObject(fabricCanvas, documentRectangle);
-  fabricCanvas.requestRenderAll();
-}
-
-function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
-  const objCenter = obj.getCenterPoint();
-  const viewportTransform = fabricCanvas.viewportTransform;
-  if (
-    fabricCanvas.width === undefined ||
-    fabricCanvas.height === undefined ||
-    !viewportTransform
-  ) {
-    return;
-  }
-  viewportTransform[4] = fabricCanvas.width / 2 - objCenter.x * viewportTransform[0];
-  viewportTransform[5] = fabricCanvas.height / 2 - objCenter.y * viewportTransform[3];
-  fabricCanvas.setViewportTransform(viewportTransform);
-  fabricCanvas.renderAll();
 }
 
 export default JournalCanvas;
