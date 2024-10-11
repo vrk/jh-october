@@ -1,4 +1,5 @@
 import styles from "./page.module.css";
+import JournalCanvas from "../../../components/JournalCanvas";
 
 export default function JournalPage({
   params,
@@ -9,6 +10,7 @@ export default function JournalPage({
     <div className={styles.page}>
       <main className={styles.main}>
         Journal Page for {params.journalId}
+        <JournalCanvas></JournalCanvas>
       </main>
     </div>
   );
