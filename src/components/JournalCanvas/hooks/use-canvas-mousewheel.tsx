@@ -15,7 +15,6 @@ function useCanvasMousewheel(fabricCanvas: Canvas| null) {
     keyup: true,
   });
 
-
   // Add mousewheel handler
   React.useEffect(() => {
     if (!fabricCanvas) {

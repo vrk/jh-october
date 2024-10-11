@@ -11,6 +11,7 @@ import {
 } from "@/helpers/canvas-helpers";
 import style from "./journalcanvas.module.css";
 import useCanvasMousewheel from "./hooks/use-canvas-mousewheel";
+import useCenterOnResize from "./hooks/use-center-on-resize";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -31,6 +32,7 @@ function JournalCanvas() {
     React.useState<FabricImage>();
 
     useCanvasMousewheel(fabricCanvas);
+    useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
 
   // Create the fabric canvas
   React.useEffect(() => {
@@ -77,23 +79,6 @@ function JournalCanvas() {
       }
     };
   }, [cousinHtmlImage, fabricCanvas]);
-
-  // Add resize handler
-  React.useEffect(() => {
-    const onWindowResize = () => {
-      if (!fabricCanvas || !overallContainer.current || !documentRectangle) {
-        return;
-      }
-      setCanvasDimensionsToWindowSize(fabricCanvas, overallContainer.current);
-      setCenterFromObject(fabricCanvas, documentRectangle);
-    };
-    window.addEventListener("resize", onWindowResize);
-
-    return () => {
-      window.removeEventListener("resize", onWindowResize);
-    };
-  }, [fabricCanvas, overallContainer, documentRectangle]);
-
 
   return (
     <div ref={overallContainer} className={style.container}>
