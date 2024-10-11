@@ -1,7 +1,6 @@
 import React from "react";
-import { Canvas, Point, TPointerEventInfo, FabricImage } from "fabric";
+import { Canvas, TPointerEventInfo } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
-import { zoomByDelta, panVerticallyByDelta } from "@/helpers/canvas-helpers";
 
 function useCanvasPan(
   fabricCanvas: Canvas | null,
