@@ -37,11 +37,12 @@ function useCanvasMousewheel(fabricCanvas: Canvas | null) {
     const onMouseWheel = (opt: any) => {
       opt.e.preventDefault();
       opt.e.stopPropagation();
-      const delta = opt.e.deltaY;
+      const deltaX = opt.e.deltaX;
+      const deltaY = opt.e.deltaY;
       if (isAltKeyPressed) {
-        zoomByDelta(fabricCanvas, delta);
+        zoomByDelta(fabricCanvas, deltaY);
       } else {
-        panVerticallyByDelta(fabricCanvas, delta);
+        panVerticallyByDelta(fabricCanvas, deltaX, deltaY);
       }
     };
     fabricCanvas.on("mouse:wheel", onMouseWheel);

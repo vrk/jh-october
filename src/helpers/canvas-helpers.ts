@@ -30,9 +30,10 @@ export function zoomByDelta(canvas: Canvas, delta: number) {
   canvas.requestRenderAll();
 }
 
-export function panVerticallyByDelta(canvas: Canvas, delta: number) {
+export function panVerticallyByDelta(canvas: Canvas, deltaX: number = 0, deltaY: number = 0) {
   const vpt = canvas.viewportTransform;
-  vpt[5] -= delta;
+  vpt[4] -= deltaX;
+  vpt[5] -= deltaY;
   canvas.setViewportTransform(vpt);
   // enclose(canvas, documentRectangle);
   canvas.requestRenderAll();
