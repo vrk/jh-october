@@ -1,12 +1,27 @@
-import * as React from 'react';
-import style from './ToolIcon.module.css';
+import * as React from "react";
+import style from "./ToolIcon.module.css";
+
+type ToolType = "photos";
 
 type ToolIconProps = {
-  onClick: React.MouseEventHandler
+  toolType: "photos";
+  onClick: React.MouseEventHandler;
 };
 
-function ToolIcon({ onClick }: React.PropsWithoutRef<ToolIconProps>) {
-  return <div onClick={onClick} className={style.container}></div>;
+function ToolIcon({ toolType, onClick }: React.PropsWithoutRef<ToolIconProps>) {
+  return (
+    <div
+      onClick={onClick}
+      className={`${style.container} ${typeToStyle(toolType)}`}
+    ></div>
+  );
+}
+
+function typeToStyle(toolType: ToolType) {
+  switch (toolType) {
+    case "photos":
+      return style.photos;
+  }
 }
 
 export default ToolIcon;
