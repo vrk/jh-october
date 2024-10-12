@@ -12,6 +12,7 @@ import style from "./journalcanvas.module.css";
 import useCanvasMousewheel from "./hooks/use-canvas-mousewheel";
 import useCenterOnResize from "./hooks/use-center-on-resize";
 import useCanvasPan from "./hooks/use-canvas-pan";
+import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -32,7 +33,8 @@ function JournalCanvas() {
 
   useCanvasMousewheel(fabricCanvas);
   useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
-  useCanvasPan(fabricCanvas, documentRectangle);
+  useCanvasPan(fabricCanvas);
+  useHotkeyZoom(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas
   React.useEffect(() => {
