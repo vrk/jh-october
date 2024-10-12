@@ -1,7 +1,8 @@
-import React from 'react';
+import * as React from 'react';
+import style from './JournalPageNav.module.css';
 
 function JournalPageNav() {
-  return <div></div>;
+  return <div className={style.container}></div>;
 }
 
 export default JournalPageNav;
