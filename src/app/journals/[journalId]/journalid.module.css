@@ -12,3 +12,8 @@
   flex-direction: column;
   overflow: hidden;
 }
+
+.inner {
+  position: relative;
+  flex-grow: 1;
+}
