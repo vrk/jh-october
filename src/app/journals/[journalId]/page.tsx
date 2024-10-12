@@ -9,7 +9,6 @@ export default function JournalPage({
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        Journal Page for {params.journalId}
         <JournalCanvas></JournalCanvas>
       </main>
     </div>

@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
 import Button from "@/components/Button";
-import { getAllJournals } from "@/helpers/indexdb";
+import { getAllJournals, Journal } from "@/helpers/indexdb";
 import style from "./journallist.module.css";
 
 function JournalList() {
-  const [journals, setJournals] = React.useState([]);
+  const [journals, setJournals] = React.useState<Array<Journal>>([]);
 
   React.useEffect(() => {
     getAllJournals().then((journals) => {

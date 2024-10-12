@@ -29,11 +29,11 @@ export async function getDatabase(): Promise<IDBDatabase> {
   });
 }
 
-type Journal = {
+export type Journal = {
   id: string
 }
 
-export async function getAllJournals(id: string) {
+export async function getAllJournals(): Promise<Array<Journal>> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(JOURNALS_STORE_NAME);
