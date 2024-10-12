@@ -1,9 +1,11 @@
 import React from "react";
-import { Canvas, TPointerEventInfo } from "fabric";
+import { Canvas, FabricImage, TPointerEventInfo } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
+import { enclose } from "@/helpers/canvas-helpers";
 
 function useCanvasPan(
   fabricCanvas: Canvas | null,
+  documentRectangle: FabricImage | undefined
 ) {
   const [isSpacebarPressed, setIsSpacebarPressed] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -35,7 +37,7 @@ function useCanvasPan(
     }
 
     const onMouseMove = (opt: any) => {
-      if (!fabricCanvas) {
+      if (!fabricCanvas || !documentRectangle) {
         return;
       }
       if (!isDragging) {
@@ -50,14 +52,14 @@ function useCanvasPan(
       fabricCanvas.requestRenderAll();
       setLastPosX(clientX);
       setLastPosY(clientY);
-      // enclose(canvas, documentRectangle);
+      // enclose(fabricCanvas, documentRectangle);
     };
 
     fabricCanvas.on("mouse:move", onMouseMove);
     return () => {
       fabricCanvas.off("mouse:move", onMouseMove);
     };
-  }, [fabricCanvas, isSpacebarPressed, isDragging, lastPosX, lastPosY]);
+  }, [fabricCanvas, documentRectangle, isSpacebarPressed, isDragging, lastPosX, lastPosY]);
 
   React.useEffect(() => {
     if (!fabricCanvas) {

@@ -31,9 +31,9 @@ function JournalCanvas() {
   const [documentRectangle, setDocumentRectangle] =
     React.useState<FabricImage>();
 
-  useCanvasMousewheel(fabricCanvas);
+  useCanvasMousewheel(fabricCanvas, documentRectangle);
   useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
-  useCanvasPan(fabricCanvas);
+  useCanvasPan(fabricCanvas, documentRectangle);
   useHotkeyZoom(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas

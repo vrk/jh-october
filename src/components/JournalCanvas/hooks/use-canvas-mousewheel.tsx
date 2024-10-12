@@ -1,9 +1,9 @@
 import React from "react";
-import { Canvas } from "fabric";
+import { Canvas, FabricImage } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
 import { zoomByDelta, panVerticallyByDelta } from "@/helpers/canvas-helpers";
 
-function useCanvasMousewheel(fabricCanvas: Canvas | null) {
+function useCanvasMousewheel(fabricCanvas: Canvas | null, documentRectangle: FabricImage | undefined) {
   const [isAltKeyPressed, setIsAltKeyPressed] = React.useState(false);
   useHotkeys(
     "meta",
@@ -30,7 +30,7 @@ function useCanvasMousewheel(fabricCanvas: Canvas | null) {
 
   // Add mousewheel handler
   React.useEffect(() => {
-    if (!fabricCanvas) {
+    if (!fabricCanvas || !documentRectangle) {
       return;
     }
 
@@ -42,14 +42,14 @@ function useCanvasMousewheel(fabricCanvas: Canvas | null) {
       if (isAltKeyPressed) {
         zoomByDelta(fabricCanvas, deltaY);
       } else {
-        panVerticallyByDelta(fabricCanvas, deltaX, deltaY);
+        panVerticallyByDelta(fabricCanvas, documentRectangle, deltaX, deltaY);
       }
     };
     fabricCanvas.on("mouse:wheel", onMouseWheel);
     return () => {
       fabricCanvas.off("mouse:wheel", onMouseWheel);
     };
-  }, [fabricCanvas, isAltKeyPressed]);
+  }, [fabricCanvas, isAltKeyPressed, documentRectangle]);
 }
 
 export default useCanvasMousewheel;
