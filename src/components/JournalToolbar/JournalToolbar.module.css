@@ -9,8 +9,9 @@
 
 .toolicons {
   width: 50px;
-  background-color: gainsboro;
+  background-color: #F9FFB3;
   height: 100%;
+  cursor: pointer;
 }
 
 .toolbarMain {
