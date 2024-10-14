@@ -1,5 +1,6 @@
 "use client";
 import { FabricObject, Canvas, util } from "fabric";
+import { setEditableObjectProperties } from "./editable-object";
 
 export function setCanvasDimensionsToWindowSize(
   canvas: Canvas,
@@ -53,6 +54,15 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
   viewportTransform[5] = fabricCanvas.height / 2 - objCenter.y * viewportTransform[3];
   fabricCanvas.setViewportTransform(viewportTransform);
   fabricCanvas.renderAll();
+}
+
+export function addFabricObjectToCanvas(canvas: Canvas, object: FabricObject) {
+  setEditableObjectProperties(object);
+  canvas.add(object);
+  canvas.bringObjectToFront(object);
+  canvas.viewportCenterObject(object);
+  canvas.setActiveObject(object);
+  canvas.requestRenderAll();
 }
 
 /******
