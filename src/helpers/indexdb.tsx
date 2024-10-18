@@ -169,3 +169,20 @@ export async function getImagesForJournal(
     };
   });
 }
+
+export async function deleteImageResource(
+  imageId: string
+) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(RESOURCES_STORE_NAME, "readwrite");
+    const objectStore = transaction.objectStore(RESOURCES_STORE_NAME);
+    const request = objectStore.delete(imageId);
+    request.onerror = () => {
+      reject(`Requested image ID could not be deleted: ${imageId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}

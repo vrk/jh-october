@@ -46,7 +46,7 @@ function PhotoTray() {
     <div className={style.container}>
       {button}
       <hr />
-      <PhotoTrayThumbnailList images={loadedImages}></PhotoTrayThumbnailList>
+      <PhotoTrayThumbnailList images={loadedImages} setImages={setLoadedImages}></PhotoTrayThumbnailList>
     </div>
   );
 }
