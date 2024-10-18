@@ -2,6 +2,7 @@ import * as React from 'react';
 import style from './PhotoTray.module.css';
 import { Canvas, FabricImage } from "fabric";
 import { addFabricObjectToCanvas } from '@/helpers/canvas-helpers';
+import { createNewImageResource } from '@/helpers/indexdb';
 import { FabricContext } from '../FabricContextProvider';
 
 function PhotoTray() {
@@ -69,11 +70,13 @@ async function onClickHandler(canvas: Canvas) {
 
 async function loadImage(canvas: Canvas, file: File) {
   const dataUrl = await readFileInput(file);
-  return addImageToCanvas(canvas, dataUrl);
+  const imageId = await createNewImageResource(dataUrl);
+  return addImageToCanvas(canvas, dataUrl, imageId);
 }
 
-async function addImageToCanvas(canvas: Canvas, dataUrl: string) {
+async function addImageToCanvas(canvas: Canvas, dataUrl: string, imageId: string) {
   const image = await FabricImage.fromURL(dataUrl);
+  image.id = imageId;
   addFabricObjectToCanvas(canvas, image);
 }
 

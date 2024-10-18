@@ -90,3 +90,25 @@ export async function createNewJournal() {
     };
   });
 }
+
+export async function createNewImageResource(data: string): Promise<string>{
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(RESOURCES_STORE_NAME, 'readwrite');
+    const objectStore = transaction.objectStore(RESOURCES_STORE_NAME);
+    const shortIDGenerator = new ShortUniqueId({ length: 10});
+    const id = shortIDGenerator.randomUUID();
+    
+    const request = objectStore.add({ 
+      id,
+      data,
+      type: 'image'
+    });
+    request.onerror = () => {
+      reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(id);
+    };
+  });
+}
