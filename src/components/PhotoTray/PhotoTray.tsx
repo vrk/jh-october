@@ -1,6 +1,5 @@
 import * as React from "react";
 import style from "./PhotoTray.module.css";
-import { Canvas } from "fabric";
 import {
   createNewImageResourceForJournal,
   getImagesForJournal,
@@ -9,6 +8,9 @@ import {
 import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
 import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
+import DropdownSelect from "../DropdownSelect";
+
+type SortBy = "lastModified" | "importTime";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
@@ -18,6 +20,9 @@ function PhotoTray() {
   const [loadedImages, setLoadedImages] = React.useState<Array<JournalImage>>(
     []
   );
+  const [selectedSortBy, setSelectedSortBy] =
+    React.useState<SortBy>("importTime");
+
   React.useEffect(() => {
     if (!journalId) {
       return;
@@ -28,6 +33,7 @@ function PhotoTray() {
     });
   }, [journalId, setLoadedImages]);
 
+  // TODO: Make this its own component
   let button = <></>;
   if (fabricCanvas && journalId) {
     const onImportPhotoButtonClick = async () => {
@@ -36,21 +42,58 @@ function PhotoTray() {
         return;
       }
       const images = await importFiles(files, journalId);
-      setLoadedImages([ ...loadedImages, ...images ]);
+      setLoadedImages([...loadedImages, ...images]);
     };
     button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
   }
 
+  sortImages(selectedSortBy, loadedImages);
   return (
     <div className={style.container}>
+      <DropdownSelect<SortBy>
+        defaultValue={"importTime"}
+        title={"Sort By"}
+        value={selectedSortBy}
+        onValueChanged={(value: SortBy) => {
+          setSelectedSortBy(value);
+        }}
+        optionList={[
+          {
+            value: "importTime",
+            title: "Import Time",
+          },
+          {
+            value: "lastModified",
+            title: "Last Modified",
+          },
+        ]}
+      ></DropdownSelect>
       {button}
       <hr />
-      <PhotoTrayThumbnailList images={loadedImages} setImages={setLoadedImages}></PhotoTrayThumbnailList>
+      <PhotoTrayThumbnailList
+        images={loadedImages}
+        setImages={setLoadedImages}
+      ></PhotoTrayThumbnailList>
     </div>
   );
 }
 
 export default PhotoTray;
+
+function sortImages(sortType: SortBy, images: Array<JournalImage>) {
+  switch(sortType) {
+    case "lastModified":
+      images.sort((a, b) => {
+        return b.lastModified - a.lastModified
+      })
+      return;
+    case "importTime":
+      images.sort((a, b) => {
+        return b.importTime - a.importTime
+      })
+      return;
+  }
+}
 
 async function openFiles(): Promise<FileList | null> {
   return new Promise((resolve) => {
