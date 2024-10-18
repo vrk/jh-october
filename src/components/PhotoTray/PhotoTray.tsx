@@ -105,16 +105,22 @@ async function createImageElement(file: File): Promise<HTMLImageElement> {
   });
 }
 
-async function createThumbnail(file: File, targetWidth = 200): Promise<string|null> {
+async function createThumbnail(file: File, targetWidth = 600): Promise<string|null> {
   const imageElement = await createImageElement(file);
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) {
     return null;
   }
-  canvas.width = targetWidth;
-  const scale = targetWidth / imageElement.width;
-  canvas.height = imageElement.height * scale;
+  if (targetWidth < imageElement.width) {
+    canvas.width = targetWidth;
+    const scale = targetWidth / imageElement.width;
+    canvas.height = imageElement.height * scale;
+  } else {
+    // Don't scale up
+    canvas.width = imageElement.width;
+    canvas.height = imageElement.height;
+  }
   context.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL("image/png");
 }
