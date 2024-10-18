@@ -2,15 +2,16 @@ import * as React from 'react';
 import style from './PhotoTray.module.css';
 import { Canvas, FabricImage } from "fabric";
 import { addFabricObjectToCanvas } from '@/helpers/canvas-helpers';
-import { createNewImageResource } from '@/helpers/indexdb';
+import { createNewImageResourceForJournal } from '@/helpers/indexdb';
 import { FabricContext } from '../FabricContextProvider';
+import { JournalContext } from '../JournalContextProvider/JournalContextProvider';
 
 function PhotoTray() {
-
   const [fabricCanvas] = React.useContext(FabricContext);
+  const [journalId] = React.useContext(JournalContext);
   let button = <></>
-  if (fabricCanvas) {
-    button = <button onClick={() => onClickHandler(fabricCanvas)}>Add photo</button>
+  if (fabricCanvas && journalId) {
+    button = <button onClick={() => onClickHandler(journalId, fabricCanvas)}>Add photo</button>
   }
 
   return <div className={style.container}>
@@ -51,7 +52,7 @@ function readFileInput(file: File): Promise<string> {
   });
 }
 
-async function onClickHandler(canvas: Canvas) {
+async function onClickHandler(journalId: string, canvas: Canvas) {
   const files = await openFiles();
   if (!files || files.length === 0) {
     return; 
@@ -62,15 +63,15 @@ async function onClickHandler(canvas: Canvas) {
     if (!item) {
       continue;
     }
-    const promise = loadImage(canvas, item);
+    const promise = loadImage(journalId, canvas, item);
     promises.push(promise);
   }
   return Promise.all(promises);
 }
 
-async function loadImage(canvas: Canvas, file: File) {
+async function loadImage(journalId: string, canvas: Canvas, file: File) {
   const dataUrl = await readFileInput(file);
-  const imageId = await createNewImageResource(dataUrl);
+  const imageId = await createNewImageResourceForJournal(journalId, dataUrl);
   return addImageToCanvas(canvas, dataUrl, imageId);
 }
 

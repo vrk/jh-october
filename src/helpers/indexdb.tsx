@@ -1,10 +1,11 @@
 "use client";
-import ShortUniqueId from 'short-unique-id';
+import ShortUniqueId from "short-unique-id";
 
 const DATABASE_NAME = "OctoberJournalHelperDb";
 
 const JOURNALS_STORE_NAME = "journals";
 const RESOURCES_STORE_NAME = "resources";
+const ID_LENGTH = 10;
 
 export async function getDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -30,8 +31,8 @@ export async function getDatabase(): Promise<IDBDatabase> {
 }
 
 export type Journal = {
-  id: string
-}
+  id: string;
+};
 
 export async function getAllJournals(): Promise<Array<Journal>> {
   return new Promise(async (resolve, reject) => {
@@ -51,8 +52,8 @@ export async function getAllJournals(): Promise<Array<Journal>> {
       }
     };
     request.onerror = () => {
-      reject('Could not get all journals');
-    }
+      reject("Could not get all journals");
+    };
   });
 }
 
@@ -74,13 +75,13 @@ export async function getJournalById(id: string) {
 export async function createNewJournal() {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
-    const transaction = db.transaction(JOURNALS_STORE_NAME, 'readwrite');
+    const transaction = db.transaction(JOURNALS_STORE_NAME, "readwrite");
     const objectStore = transaction.objectStore(JOURNALS_STORE_NAME);
-    const shortIDGenerator = new ShortUniqueId({ length: 10});
+    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
     const id = shortIDGenerator.randomUUID();
-    
-    const request = objectStore.add({ 
-      id
+
+    const request = objectStore.add({
+      id,
     });
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
@@ -91,18 +92,19 @@ export async function createNewJournal() {
   });
 }
 
-export async function createNewImageResource(data: string): Promise<string>{
+export async function createNewImageResourceForJournal(journalId: string, data: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
-    const transaction = db.transaction(RESOURCES_STORE_NAME, 'readwrite');
+    const transaction = db.transaction(RESOURCES_STORE_NAME, "readwrite");
     const objectStore = transaction.objectStore(RESOURCES_STORE_NAME);
-    const shortIDGenerator = new ShortUniqueId({ length: 10});
+    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
     const id = shortIDGenerator.randomUUID();
-    
-    const request = objectStore.add({ 
+
+    const request = objectStore.add({
       id,
+      journalId,
       data,
-      type: 'image'
+      type: "image",
     });
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
