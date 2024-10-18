@@ -22,15 +22,20 @@ function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Pro
     const newImages = images.filter((image) => image.id !== selectedImageId);
     setImages(newImages);
     console.log('index', selectedIndex);
-    if (selectedIndex >= 0 && selectedIndex < images.length) {
-      setSelectedImageId(newImages[selectedIndex].id);
+    if (selectedIndex >= 0) {
+      if (selectedIndex < newImages.length) {
+        setSelectedImageId(newImages[selectedIndex].id);
+      } else if (selectedIndex > 0) {
+        // Set to last element in the list
+        setSelectedImageId(newImages[selectedIndex - 1].id);
+      }
     }
   };
   useHotkeyDeletePhotoResource(selectedImageId, () => deleteSelectedImage());
   useHotkeyPhotoNav(images, selectedImageId, setSelectedImageId);
 
   return (
-    <div className={style.container}>
+    <div className={style.container} onBlur={() => { console.log('blurring'); setSelectedImageId(null) }}>
       {images.map((image, index) => (
         <PhotoTrayThumbnail
           src={image.thumbDataUrl}
