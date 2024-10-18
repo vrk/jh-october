@@ -7,12 +7,18 @@ type PhotoTrayThumbnailProps = {
   height: number;
   width: number;
   selected: boolean;
+  tabIndex: number;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 function PhotoTrayThumbnail({
   src,
   height,
   width,
+  onFocus,
+  onBlur,
+  tabIndex,
   selected = false
 }: React.PropsWithoutRef<PhotoTrayThumbnailProps>) {
   const classNames = `${style.container} ${selected ? style.selected : ''}`; 
@@ -27,6 +33,9 @@ function PhotoTrayThumbnail({
           width: "100%",
           height: "auto",
         }}
+        tabIndex={tabIndex}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
     </div>
   );
