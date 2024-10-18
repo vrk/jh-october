@@ -2,12 +2,10 @@ import * as React from "react";
 import style from "./PhotoTrayThumbnail.module.css";
 import Image from "next/image";
 import useIsVisible from "@/hooks/use-is-visible";
+import { JournalImage } from "@/helpers/indexdb";
 
 type PhotoTrayThumbnailProps = {
-  src: string;
-  height: number;
-  width: number;
-  lastModified: number;
+  image: JournalImage;
   selected: boolean;
   tabIndex: number;
   onFocus?: () => void;
@@ -15,10 +13,7 @@ type PhotoTrayThumbnailProps = {
 };
 
 function PhotoTrayThumbnail({
-  src,
-  height,
-  width,
-  lastModified,
+  image,
   onFocus,
   onBlur,
   tabIndex,
@@ -37,16 +32,17 @@ function PhotoTrayThumbnail({
       }
     }
   }, [selected, imageRef]);
+  const displayDate = image.photoTakenTime || image.lastModified;
 
   const classNames = `${style.container} ${selected ? style.selected : ''}`; 
   return (
     <div className={classNames}>
       <Image
         ref={imageRef}
-        src={src}
+        src={image.thumbDataUrl}
         alt="photo thumbnail"
-        height={height}
-        width={width}
+        height={image.thumbHeight}
+        width={image.thumbWidth}
         style={{
           width: "100%",
           height: "auto",
@@ -55,7 +51,7 @@ function PhotoTrayThumbnail({
         onFocus={onFocus}
         onBlur={() => { console.log('blur item'); onBlur && onBlur() }}
       />
-      <div></div>
+      <div>{new Date(displayDate).toLocaleString()}</div>
     </div>
   );
 }

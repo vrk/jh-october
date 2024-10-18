@@ -12,7 +12,7 @@ import DropdownSelect from "../DropdownSelect";
 import * as ExifReader from 'exifreader';
 
 
-type SortBy = "lastModified" | "importTime";
+type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
@@ -65,8 +65,12 @@ function PhotoTray() {
             title: "Import Time",
           },
           {
-            value: "lastModified",
-            title: "Last Modified",
+            value: "imageDate",
+            title: "Image Date",
+          },
+          {
+            value: "imageDateReversed",
+            title: "Image Date (reversed)",
           },
         ]}
       ></DropdownSelect>
@@ -84,14 +88,23 @@ export default PhotoTray;
 
 function sortImages(sortType: SortBy, images: Array<JournalImage>) {
   switch(sortType) {
-    case "lastModified":
+    case "imageDate":
       images.sort((a, b) => {
-        return b.lastModified - a.lastModified
+        const bValue = b.photoTakenTime || b.lastModified;
+        const aValue = a.photoTakenTime || a.lastModified;
+        return bValue - aValue;
       })
       return;
     case "importTime":
       images.sort((a, b) => {
         return b.importTime - a.importTime
+      })
+      return;
+    case "imageDateReversed":
+      images.sort((a, b) => {
+        const bValue = b.photoTakenTime || b.lastModified;
+        const aValue = a.photoTakenTime || a.lastModified;
+        return aValue - bValue;
       })
       return;
   }
@@ -156,19 +169,21 @@ async function importImage(
   if (!thumbnail) {
     return null;
   }
+  let photoTakenTime;
   if (tags) {
     const imageDate = tags['DateTimeOriginal']?.description;
-    const unprocessedTagValue = tags['DateTimeOriginal']?.value;
     if (imageDate) {
       // TODO: FIX HACK!!!!
       let hackedDate = imageDate.replace(':', "-");
       hackedDate = hackedDate.replace(':', '-');
       console.log('tags', hackedDate, Date.parse(hackedDate));
+      photoTakenTime = Date.parse(hackedDate);
     }
   }
   const imageInfo = {
     id: "", // HACK to make typescript compiler happy -_-
     lastModified: file.lastModified,
+    photoTakenTime,
     importTime: Date.now(),
     journalId,
     dataUrl,

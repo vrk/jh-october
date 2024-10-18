@@ -19,6 +19,7 @@ export type JournalImage = {
   thumbWidth: number;
   thumbHeight: number;
   lastModified: number;
+  photoTakenTime?: number;
   importTime: number;
 };
 

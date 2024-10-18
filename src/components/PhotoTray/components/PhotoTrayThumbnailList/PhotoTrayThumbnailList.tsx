@@ -38,10 +38,8 @@ function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Pro
     <div className={style.container} onBlur={() => { console.log('blurring'); setSelectedImageId(null) }}>
       {images.map((image, index) => (
         <PhotoTrayThumbnail
-          src={image.thumbDataUrl}
           key={image.id}
-          height={image.thumbHeight}
-          width={image.thumbWidth}
+          image={image}
           tabIndex={index}
           selected={selectedImageId === image.id}
           onBlur={() => setSelectedImageId(null)}
