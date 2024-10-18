@@ -1,6 +1,7 @@
 import * as React from "react";
 import style from "./PhotoTrayThumbnail.module.css";
 import Image from "next/image";
+import useIsVisible from "@/hooks/use-is-visible";
 
 type PhotoTrayThumbnailProps = {
   src: string;
@@ -22,10 +23,16 @@ function PhotoTrayThumbnail({
   selected = false
 }: React.PropsWithoutRef<PhotoTrayThumbnailProps>) {
   const imageRef = React.useRef<HTMLImageElement>(null);
+  const isVisible = useIsVisible(imageRef);
 
   React.useEffect(() => {
     if (!selected) {
       imageRef.current?.blur();
+    } else {
+      imageRef.current?.focus();
+      if (!isVisible) {
+        imageRef.current?.scrollIntoView();
+      }
     }
   }, [selected, imageRef]);
 
