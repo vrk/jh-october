@@ -17,7 +17,6 @@ type DropdownProps<T> = {
 function DropdownSelect<T extends string>({
   title,
   value,
-  defaultValue,
   onValueChanged,
   optionList,
 }: React.PropsWithoutRef<DropdownProps<T>>) {
@@ -25,7 +24,6 @@ function DropdownSelect<T extends string>({
     <div className={style.container}>
       <select
         onChange={(event) => onValueChanged(event.target.value as T)}
-        defaultValue={defaultValue}
         value={value}
       >
         {optionList.map((option) => (

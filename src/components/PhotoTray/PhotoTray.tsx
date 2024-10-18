@@ -9,6 +9,8 @@ import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
 import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
 import DropdownSelect from "../DropdownSelect";
+import * as ExifReader from 'exifreader';
+
 
 type SortBy = "lastModified" | "importTime";
 
@@ -145,13 +147,24 @@ async function importImage(
   journalId: string,
   file: File
 ): Promise<JournalImage | null> {
-  const [dataUrl, imageElement] = await Promise.all([
+  const [dataUrl, imageElement, tags] = await Promise.all([
     readFileInput(file),
     createImageElement(file),
+    ExifReader.load(file, {async: true})
   ]);
   const thumbnail = createThumbnail(imageElement);
   if (!thumbnail) {
     return null;
+  }
+  if (tags) {
+    const imageDate = tags['DateTimeOriginal']?.description;
+    const unprocessedTagValue = tags['DateTimeOriginal']?.value;
+    if (imageDate) {
+      // TODO: FIX HACK!!!!
+      let hackedDate = imageDate.replace(':', "-");
+      hackedDate = hackedDate.replace(':', '-');
+      console.log('tags', hackedDate, Date.parse(hackedDate));
+    }
   }
   const imageInfo = {
     id: "", // HACK to make typescript compiler happy -_-
