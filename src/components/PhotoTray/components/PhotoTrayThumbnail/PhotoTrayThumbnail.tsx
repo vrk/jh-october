@@ -7,6 +7,7 @@ type PhotoTrayThumbnailProps = {
   src: string;
   height: number;
   width: number;
+  lastModified: number;
   selected: boolean;
   tabIndex: number;
   onFocus?: () => void;
@@ -17,6 +18,7 @@ function PhotoTrayThumbnail({
   src,
   height,
   width,
+  lastModified,
   onFocus,
   onBlur,
   tabIndex,
@@ -53,6 +55,7 @@ function PhotoTrayThumbnail({
         onFocus={onFocus}
         onBlur={() => { console.log('blur item'); onBlur && onBlur() }}
       />
+      <div></div>
     </div>
   );
 }
