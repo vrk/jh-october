@@ -20,33 +20,56 @@ function PhotoTray() {
 
 export default PhotoTray;
 
-async function openFile(): Promise<string|null> {
+async function openFiles(): Promise<FileList|null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = "image/*"
+    input.multiple = true;
     input.addEventListener("change", () => {
-      const file = input.files?.item(0);
-      if (!file) {
+      
+      // const file = input.files?.item(0);
+      const { files } = input;
+      if (!files) {
         resolve(null);
+        return;
       }
-      const fileReader = new FileReader();
-      fileReader.addEventListener('load', () => {
-        resolve(fileReader.result as string)
-      })
-      fileReader.readAsDataURL(file as File);
+      resolve(files);
     })
     input.click();
   })
 }
 
+function readFileInput(file: File): Promise<string> {
+  return new Promise((resolve) => {
+      const fileReader = new FileReader();
+      fileReader.addEventListener('load', () => {
+        resolve(fileReader.result as string)
+      })
+      fileReader.readAsDataURL(file);
+  });
+}
+
 async function onClickHandler(canvas: Canvas) {
-  const base64 = await openFile();
-  if (!base64) {
-    return; // canceled
+  const files = await openFiles();
+  if (!files || files.length === 0) {
+    return; 
   }
-  const url = base64;
-  await addImageToCanvas(canvas, url);
+  const promises = [];
+  for (let i = 0; i < files?.length; i++) {
+    const item = files.item(i);
+    if (!item) {
+      continue;
+    }
+    const promise = loadImage(canvas, item);
+    promises.push(promise);
+  }
+  return Promise.all(promises);
+}
+
+async function loadImage(canvas: Canvas, file: File) {
+  const dataUrl = await readFileInput(file);
+  return addImageToCanvas(canvas, dataUrl);
 }
 
 async function addImageToCanvas(canvas: Canvas, dataUrl: string) {
