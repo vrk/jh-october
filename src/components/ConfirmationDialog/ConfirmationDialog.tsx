@@ -3,10 +3,13 @@ import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import styles from './ConfirmationDialog.module.css';
 
 type Props = {
+  isOpen: boolean;
   title: string;
   description: string;
   cancel: string;
   confirm: string;
+  onConfirm: () => void;
+  onOpenChange: (isOpen: boolean) => void;
 };
 
 const ConfirmationDialog = ({
@@ -14,10 +17,11 @@ const ConfirmationDialog = ({
   description,
   cancel,
   confirm,
-  children,
+  onConfirm,
+  onOpenChange,
+  isOpen
 }: React.PropsWithChildren<Props>) => (
-  <AlertDialog.Root>
-    <AlertDialog.Trigger asChild>{children}</AlertDialog.Trigger>
+  <AlertDialog.Root open={isOpen} onOpenChange={onOpenChange}>
     <AlertDialog.Portal>
       <AlertDialog.Overlay className={styles.AlertDialogOverlay} />
       <AlertDialog.Content className={styles.AlertDialogContent}>
@@ -32,7 +36,7 @@ const ConfirmationDialog = ({
             <button className={`${styles.Button} ${styles.mauve}`}>{cancel}</button>
           </AlertDialog.Cancel>
           <AlertDialog.Action asChild>
-            <button className={`${styles.Button} ${styles.red}`}>{confirm}</button>
+            <button className={`${styles.Button} ${styles.red}`} onClick={onConfirm}>{confirm}</button>
           </AlertDialog.Action>
         </div>
       </AlertDialog.Content>

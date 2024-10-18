@@ -13,7 +13,7 @@ import useCanvasMousewheel from "./hooks/use-canvas-mousewheel";
 import useCenterOnResize from "./hooks/use-center-on-resize";
 import useCanvasPan from "./hooks/use-canvas-pan";
 import useHotkeyZoom from "./hooks/use-hotkey-zoom";
-import useHotkeyDeleteImage from "./hooks/use-hokey-delete-image";
+import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
