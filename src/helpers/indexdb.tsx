@@ -18,6 +18,8 @@ export type JournalImage = {
   thumbDataUrl: string;
   thumbWidth: number;
   thumbHeight: number;
+  lastModified: number;
+  importTime: number;
 };
 
 const ID_LENGTH = 10;

@@ -36,7 +36,7 @@ function PhotoTray() {
       if (!files || files.length === 0) {
         return;
       }
-      const images = await loadFiles(files, journalId);
+      const images = await importFiles(files, journalId);
       setLoadedImages([ ...loadedImages, ...images ]);
     };
     button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
@@ -82,7 +82,7 @@ function readFileInput(file: File): Promise<string> {
   });
 }
 
-async function loadFiles(
+async function importFiles(
   files: FileList,
   journalId: string
 ): Promise<Array<JournalImage>> {
@@ -92,14 +92,14 @@ async function loadFiles(
     if (!item) {
       continue;
     }
-    const promise = loadImage(journalId, item);
+    const promise = importImage(journalId, item);
     promises.push(promise);
   }
   const images = await Promise.all(promises);
   return images.filter((i) => i !== null);
 }
 
-async function loadImage(
+async function importImage(
   journalId: string,
   file: File
 ): Promise<JournalImage | null> {
@@ -113,6 +113,8 @@ async function loadImage(
   }
   const imageInfo = {
     id: "", // HACK to make typescript compiler happy -_-
+    lastModified: file.lastModified,
+    importTime: Date.now(),
     journalId,
     dataUrl,
     width: imageElement.width,
