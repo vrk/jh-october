@@ -21,10 +21,19 @@ function PhotoTrayThumbnail({
   tabIndex,
   selected = false
 }: React.PropsWithoutRef<PhotoTrayThumbnailProps>) {
+  const imageRef = React.useRef<HTMLImageElement>(null);
+
+  React.useEffect(() => {
+    if (!selected) {
+      imageRef.current?.blur();
+    }
+  }, [selected, imageRef]);
+
   const classNames = `${style.container} ${selected ? style.selected : ''}`; 
   return (
     <div className={classNames}>
       <Image
+        ref={imageRef}
         src={src}
         alt="photo thumbnail"
         height={height}
@@ -35,7 +44,7 @@ function PhotoTrayThumbnail({
         }}
         tabIndex={tabIndex}
         onFocus={onFocus}
-        onBlur={onBlur}
+        onBlur={() => { console.log('blur item'); onBlur && onBlur() }}
       />
     </div>
   );

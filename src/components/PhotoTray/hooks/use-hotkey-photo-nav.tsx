@@ -4,7 +4,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 function useHotkeyPhotoNav(
   images: Array<JournalImage>,
   selectedId: string|null,
-  setSelectedId: (selectedId: string) => void,
+  setSelectedId: (selectedId: string|null) => void,
   itemsPerRow = 1
 ) {
   function getIndex(selectedId: string) {
@@ -69,6 +69,17 @@ function useHotkeyPhotoNav(
         const newId = getId(currentIndex + itemsPerRow);
         setSelectedId(newId);
       }
+    },
+    { preventDefault: true },
+    [images, selectedId, setSelectedId]
+  );
+  useHotkeys(
+    "escape",
+    () => {
+      if (!selectedId) {
+        return;
+      }
+      setSelectedId(null);
     },
     { preventDefault: true },
     [images, selectedId, setSelectedId]
