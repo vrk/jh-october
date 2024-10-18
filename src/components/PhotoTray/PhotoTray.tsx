@@ -1,7 +1,6 @@
 import * as React from "react";
 import style from "./PhotoTray.module.css";
-import { Canvas, FabricImage } from "fabric";
-import { addFabricObjectToCanvas } from "@/helpers/canvas-helpers";
+import { Canvas } from "fabric";
 import {
   createNewImageResourceForJournal,
   getImagesForJournal,
@@ -14,6 +13,8 @@ import PhotoTrayThumbnail from "./components/PhotoTrayThumbnail";
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
   const [journalId] = React.useContext(JournalContext);
+
+  // TODO: This is a lot of copies... Figure out if performance is miserable
   const [loadedImages, setLoadedImages] = React.useState<Array<JournalImage>>(
     []
   );
@@ -119,16 +120,6 @@ async function loadImage(journalId: string, canvas: Canvas, file: File) {
   });
   // const imageId = await createNewImageResourceForJournal(journalId, dataUrl, thumbDataUrl);
   // return addImageToCanvas(canvas, dataUrl, imageId);
-}
-
-async function addImageToCanvas(
-  canvas: Canvas,
-  dataUrl: string,
-  imageId: string
-) {
-  const image = await FabricImage.fromURL(dataUrl);
-  image.id = imageId;
-  addFabricObjectToCanvas(canvas, image);
 }
 
 async function createImageElement(file: File): Promise<HTMLImageElement> {

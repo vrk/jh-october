@@ -1,10 +1,13 @@
 
 import {
+  Canvas,
   Control,
   controlsUtils,
+  FabricImage,
   FabricObject,
 } from "fabric";
 import ShortUniqueId from 'short-unique-id';
+import { addFabricObjectToCanvas } from "@/helpers/canvas-helpers";
 
 export function setEditableObjectProperties(object: FabricObject) {
   // TODO: UGH hack
@@ -144,4 +147,15 @@ function onCropFromBottom(eventData, transform, x, y) {
     return true;
   }
   return false;
+}
+
+
+export async function addImageToCanvas(
+  canvas: Canvas,
+  dataUrl: string,
+  imageId: string
+) {
+  const image = await FabricImage.fromURL(dataUrl);
+  image.id = imageId;
+  addFabricObjectToCanvas(canvas, image);
 }
