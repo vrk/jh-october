@@ -27,13 +27,18 @@ function PhotoTray() {
       setLoadedImages(loadedImages);
     });
   }, [journalId, setLoadedImages]);
+
   let button = <></>;
   if (fabricCanvas && journalId) {
-    button = (
-      <button onClick={() => onClickHandler(journalId, fabricCanvas)}>
-        Import photos
-      </button>
-    );
+    const onImportPhotoButtonClick = async () => {
+      const files = await openFiles();
+      if (!files || files.length === 0) {
+        return;
+      }
+      const images = await loadFiles(files, journalId);
+      setLoadedImages([ ...loadedImages, ...images ]);
+    };
+    button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
   }
 
   return (
@@ -83,33 +88,37 @@ function readFileInput(file: File): Promise<string> {
   });
 }
 
-async function onClickHandler(journalId: string, canvas: Canvas) {
-  const files = await openFiles();
-  if (!files || files.length === 0) {
-    return;
-  }
+async function loadFiles(
+  files: FileList,
+  journalId: string
+): Promise<Array<JournalImage>> {
   const promises = [];
-  for (let i = 0; i < files?.length; i++) {
+  for (let i = 0; i < files.length; i++) {
     const item = files.item(i);
     if (!item) {
       continue;
     }
-    const promise = loadImage(journalId, canvas, item);
+    const promise = loadImage(journalId, item);
     promises.push(promise);
   }
-  return Promise.all(promises);
+  const images = await Promise.all(promises);
+  return images.filter((i) => i !== null);
 }
 
-async function loadImage(journalId: string, canvas: Canvas, file: File) {
+async function loadImage(
+  journalId: string,
+  file: File
+): Promise<JournalImage | null> {
   const [dataUrl, imageElement] = await Promise.all([
     readFileInput(file),
     createImageElement(file),
   ]);
   const thumbnail = createThumbnail(imageElement);
   if (!thumbnail) {
-    return;
+    return null;
   }
-  return createNewImageResourceForJournal({
+  const imageInfo = {
+    id: "", // HACK to make typescript compiler happy -_-
     journalId,
     dataUrl,
     width: imageElement.width,
@@ -117,9 +126,10 @@ async function loadImage(journalId: string, canvas: Canvas, file: File) {
     thumbDataUrl: thumbnail.data,
     thumbHeight: thumbnail.height,
     thumbWidth: thumbnail.width,
-  });
-  // const imageId = await createNewImageResourceForJournal(journalId, dataUrl, thumbDataUrl);
-  // return addImageToCanvas(canvas, dataUrl, imageId);
+  };
+  const imageId = await createNewImageResourceForJournal(imageInfo);
+  imageInfo.id = imageId;
+  return imageInfo;
 }
 
 async function createImageElement(file: File): Promise<HTMLImageElement> {
