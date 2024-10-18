@@ -9,6 +9,7 @@ import {
 import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
 import PhotoTrayThumbnail from "./components/PhotoTrayThumbnail";
+import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
@@ -45,14 +46,7 @@ function PhotoTray() {
     <div className={style.container}>
       {button}
       <hr />
-      {loadedImages.map((image) => (
-        <PhotoTrayThumbnail
-          src={image.thumbDataUrl}
-          key={image.id}
-          height={image.thumbHeight}
-          width={image.thumbWidth}
-        />
-      ))}
+      <PhotoTrayThumbnailList images={loadedImages}></PhotoTrayThumbnailList>
     </div>
   );
 }
