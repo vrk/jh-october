@@ -2,14 +2,30 @@ import * as React from "react";
 import style from "./PhotoTray.module.css";
 import { Canvas, FabricImage } from "fabric";
 import { addFabricObjectToCanvas } from "@/helpers/canvas-helpers";
-import { createNewImageResourceForJournal } from "@/helpers/indexdb";
+import {
+  createNewImageResourceForJournal,
+  getImagesForJournal,
+  JournalImage,
+} from "@/helpers/indexdb";
 import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
-import { resolve } from "path";
+import PhotoTrayThumbnail from "./components/PhotoTrayThumbnail";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
   const [journalId] = React.useContext(JournalContext);
+  const [loadedImages, setLoadedImages] = React.useState<Array<JournalImage>>(
+    []
+  );
+  React.useEffect(() => {
+    if (!journalId) {
+      return;
+    }
+    getImagesForJournal(journalId).then((loadedImages) => {
+      console.log("loaded", loadedImages);
+      setLoadedImages(loadedImages);
+    });
+  }, [journalId, setLoadedImages]);
   let button = <></>;
   if (fabricCanvas && journalId) {
     button = (
@@ -23,6 +39,9 @@ function PhotoTray() {
     <div className={style.container}>
       {button}
       <hr />
+      {loadedImages.map((image) => (
+        <PhotoTrayThumbnail src={image.thumbDataUrl} key={image.id} />
+      ))}
     </div>
   );
 }
@@ -76,11 +95,23 @@ async function onClickHandler(journalId: string, canvas: Canvas) {
 }
 
 async function loadImage(journalId: string, canvas: Canvas, file: File) {
-  const [ dataUrl, thumbDataUrl] = await Promise.all([readFileInput(file), createThumbnail(file)]);
-  if (!thumbDataUrl) {
+  const [dataUrl, imageElement] = await Promise.all([
+    readFileInput(file),
+    createImageElement(file),
+  ]);
+  const thumbnail = createThumbnail(imageElement);
+  if (!thumbnail) {
     return;
   }
-  return createNewImageResourceForJournal(journalId, dataUrl, thumbDataUrl);
+  return createNewImageResourceForJournal({
+    journalId,
+    dataUrl,
+    width: imageElement.width,
+    height: imageElement.height,
+    thumbDataUrl: thumbnail.data,
+    thumbHeight: thumbnail.height,
+    thumbWidth: thumbnail.width,
+  });
   // const imageId = await createNewImageResourceForJournal(journalId, dataUrl, thumbDataUrl);
   // return addImageToCanvas(canvas, dataUrl, imageId);
 }
@@ -105,8 +136,16 @@ async function createImageElement(file: File): Promise<HTMLImageElement> {
   });
 }
 
-async function createThumbnail(file: File, targetWidth = 600): Promise<string|null> {
-  const imageElement = await createImageElement(file);
+type Thumbnail = {
+  data: string;
+  height: number;
+  width: number;
+};
+
+function createThumbnail(
+  imageElement: HTMLImageElement,
+  targetWidth = 600
+): Thumbnail | null {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) {
@@ -122,5 +161,9 @@ async function createThumbnail(file: File, targetWidth = 600): Promise<string|nu
     canvas.height = imageElement.height;
   }
   context.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/png");
+  return {
+    data: canvas.toDataURL("image/png"),
+    height: canvas.height,
+    width: canvas.width,
+  };
 }

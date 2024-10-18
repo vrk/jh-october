@@ -5,11 +5,25 @@ const DATABASE_NAME = "OctoberJournalHelperDb";
 
 const JOURNALS_STORE_NAME = "journals";
 const RESOURCES_STORE_NAME = "resources";
+const RESOURCES_JOURNAL_ID_INDEX_NAME = "resources_journal_id";
+
+// TODO: make this less fragile
+const JOURNAL_ID_KEY_NAME = "journalId"; // CAREFUL!! MUST MATCH JOURNALIMAGE TYPE FIELD
+export type JournalImage = {
+  id: string;
+  journalId: string;
+  dataUrl: string;
+  thumbDataUrl: string;
+  height: number;
+  width: number;
+  type: "image";
+};
+
 const ID_LENGTH = 10;
 
 export async function getDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DATABASE_NAME, 1 /** version */);
+    const request = window.indexedDB.open(DATABASE_NAME, 1.1 /** version */);
     request.onerror = (event) => {
       const reason = "An error occurred with IndexedDb";
       console.error(reason, event);
@@ -20,7 +34,17 @@ export async function getDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const db = request.result;
       db.createObjectStore(JOURNALS_STORE_NAME, { keyPath: "id" });
-      db.createObjectStore(RESOURCES_STORE_NAME, { keyPath: "id" });
+      const resourcesStore = db.createObjectStore(RESOURCES_STORE_NAME, {
+        keyPath: "id",
+      });
+
+      resourcesStore.createIndex(
+        RESOURCES_JOURNAL_ID_INDEX_NAME,
+        JOURNAL_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
     };
 
     request.onsuccess = () => {
@@ -92,7 +116,18 @@ export async function createNewJournal() {
   });
 }
 
-export async function createNewImageResourceForJournal(journalId: string, dataUrl: string, thumbDataUrl: string): Promise<string> {
+type JournalImageParam = {
+  journalId: string;
+  dataUrl: string;
+  width: number;
+  height: number;
+  thumbDataUrl: string;
+  thumbWidth: number;
+  thumbHeight: number;
+};
+export async function createNewImageResourceForJournal(
+  imageInfo: JournalImageParam
+): Promise<string> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(RESOURCES_STORE_NAME, "readwrite");
@@ -100,18 +135,36 @@ export async function createNewImageResourceForJournal(journalId: string, dataUr
     const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
     const id = shortIDGenerator.randomUUID();
 
-    const request = objectStore.add({
+    const object: JournalImage = {
+      ...imageInfo,
       id,
-      journalId,
-      dataUrl,
-      thumbDataUrl,
       type: "image",
-    });
+    };
+
+    const request = objectStore.add(object);
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };
     request.onsuccess = () => {
       resolve(id);
+    };
+  });
+}
+
+export async function getImagesForJournal(
+  journalId: string
+): Promise<Array<JournalImage>> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(RESOURCES_STORE_NAME);
+    const objectStore = transaction.objectStore(RESOURCES_STORE_NAME);
+    const journalIdIndex = objectStore.index(RESOURCES_JOURNAL_ID_INDEX_NAME);
+    const request = journalIdIndex.getAll(journalId);
+    request.onerror = () => {
+      reject(`Requested journal ID is not found: ${journalId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
     };
   });
 }
