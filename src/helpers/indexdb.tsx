@@ -92,7 +92,7 @@ export async function createNewJournal() {
   });
 }
 
-export async function createNewImageResourceForJournal(journalId: string, data: string): Promise<string> {
+export async function createNewImageResourceForJournal(journalId: string, dataUrl: string, thumbDataUrl: string): Promise<string> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(RESOURCES_STORE_NAME, "readwrite");
@@ -103,7 +103,8 @@ export async function createNewImageResourceForJournal(journalId: string, data: 
     const request = objectStore.add({
       id,
       journalId,
-      data,
+      dataUrl,
+      thumbDataUrl,
       type: "image",
     });
     request.onerror = () => {
