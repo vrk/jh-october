@@ -40,7 +40,12 @@ function PhotoTray() {
       {button}
       <hr />
       {loadedImages.map((image) => (
-        <PhotoTrayThumbnail src={image.thumbDataUrl} key={image.id} />
+        <PhotoTrayThumbnail
+          src={image.thumbDataUrl}
+          key={image.id}
+          height={image.thumbHeight}
+          width={image.thumbWidth}
+        />
       ))}
     </div>
   );

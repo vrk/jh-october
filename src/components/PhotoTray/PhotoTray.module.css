@@ -4,4 +4,5 @@
   background-color: #FFF2F2;
   padding: 10px;
   padding-left: 60px;
+  overflow-y: scroll;
 }

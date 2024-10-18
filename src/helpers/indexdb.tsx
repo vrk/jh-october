@@ -13,9 +13,11 @@ export type JournalImage = {
   id: string;
   journalId: string;
   dataUrl: string;
-  thumbDataUrl: string;
   height: number;
   width: number;
+  thumbDataUrl: string;
+  thumbWidth: number;
+  thumbHeight: number;
   type: "image";
 };
 
