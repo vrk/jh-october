@@ -3,6 +3,7 @@ import style from "./PhotoTrayThumbnailList.module.css";
 import PhotoTrayThumbnail from "../PhotoTrayThumbnail/PhotoTrayThumbnail";
 import { deleteImageResource, JournalImage } from "@/helpers/indexdb";
 import useHotkeyDeletePhotoResource from "../../hooks/use-hotkey-delete-photo-resource";
+import useHotkeyPhotoNav from "../../hooks/use-hotkey-photo-nav";
 
 type Props = {
   images: Array<JournalImage>;
@@ -26,6 +27,7 @@ function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Pro
     }
   };
   useHotkeyDeletePhotoResource(selectedImageId, () => deleteSelectedImage());
+  useHotkeyPhotoNav(images, selectedImageId, setSelectedImageId);
 
   return (
     <div className={style.container}>
