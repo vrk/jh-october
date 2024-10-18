@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/colors": "^3.0.0",
+    "@radix-ui/react-alert-dialog": "^1.1.2",
     "fabric": "^6.4.3",
     "next": "14.2.14",
     "react": "^18",
