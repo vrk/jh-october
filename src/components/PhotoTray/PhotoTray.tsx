@@ -8,7 +8,6 @@ import {
 } from "@/helpers/indexdb";
 import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
-import PhotoTrayThumbnail from "./components/PhotoTrayThumbnail";
 import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
 
 function PhotoTray() {
