@@ -4,8 +4,15 @@ import ShortUniqueId from "short-unique-id";
 const DATABASE_NAME = "OctoberJournalHelperDb";
 
 const JOURNALS_STORE_NAME = "journals";
+
 const RESOURCES_STORE_NAME = "resources";
 const RESOURCES_JOURNAL_ID_INDEX_NAME = "resources_journal_id";
+
+const SPREADS_STORE_NAME = "spreads";
+const SPREADS_TO_JOURNAL_ID_INDEX_NAME = "spreads_journal_id";
+
+const SPREAD_ITEMS_STORE_NAME = "spread_items";
+const SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME = "spread_item_spread_id";
 
 // TODO: make this less fragile
 const JOURNAL_ID_KEY_NAME = "journalId"; // CAREFUL!! MUST MATCH JOURNALIMAGE TYPE FIELD
@@ -23,6 +30,12 @@ export type JournalImage = {
   importTime: number;
 };
 
+export type Journal = {
+  id: string;
+};
+
+const SPREAD_ID_KEY_NAME = "spreadId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
+
 const ID_LENGTH = 10;
 
 export async function getDatabase(): Promise<IDBDatabase> {
@@ -37,14 +50,37 @@ export async function getDatabase(): Promise<IDBDatabase> {
     // This is run the first time the database is created, or any time the database needs to be upgraded (version update)
     request.onupgradeneeded = () => {
       const db = request.result;
+
+      // Create journal table
       db.createObjectStore(JOURNALS_STORE_NAME, { keyPath: "id" });
+
+      // Create resources table, with an index into journal
       const resourcesStore = db.createObjectStore(RESOURCES_STORE_NAME, {
         keyPath: "id",
       });
-
       resourcesStore.createIndex(
         RESOURCES_JOURNAL_ID_INDEX_NAME,
         JOURNAL_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
+
+      // Create spreads table, with index into journal
+      const spreadsStore = db.createObjectStore(SPREADS_STORE_NAME, { keyPath: "id" });
+      spreadsStore.createIndex(
+        SPREADS_TO_JOURNAL_ID_INDEX_NAME,
+        JOURNAL_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
+
+      // Create spreadItems table, with index into journal
+      const spreadItemsStore = db.createObjectStore(SPREAD_ITEMS_STORE_NAME, { keyPath: "id" });
+      spreadItemsStore.createIndex(
+        SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME,
+        SPREAD_ID_KEY_NAME,
         {
           unique: false,
         }
@@ -57,10 +93,6 @@ export async function getDatabase(): Promise<IDBDatabase> {
     };
   });
 }
-
-export type Journal = {
-  id: string;
-};
 
 export async function getAllJournals(): Promise<Array<Journal>> {
   return new Promise(async (resolve, reject) => {
@@ -117,6 +149,12 @@ export async function getPhotoById(id: string): Promise<JournalImage> {
 }
 
 export async function createNewJournal() {
+  const journal = await createNewJournalRowInDb();
+  const spread = await createNewSpreadForJournal(journal.id);
+  return { journal, spread };
+}
+
+async function createNewJournalRowInDb(): Promise<Journal> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(JOURNALS_STORE_NAME, "readwrite");
@@ -126,6 +164,47 @@ export async function createNewJournal() {
 
     const request = objectStore.add({
       id,
+    });
+    request.onerror = () => {
+      reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve({ id });
+    };
+  });
+}
+
+async function getNumberOfSpreadsForJournal(spreadStore: IDBObjectStore, journalId: string) {
+  return new Promise(async (resolve, reject) => {
+
+    const journalIdIndex = spreadStore.index(SPREADS_TO_JOURNAL_ID_INDEX_NAME);
+    const countRequest = journalIdIndex.count(IDBKeyRange.only(journalId));
+
+    countRequest.onerror = () => {
+      reject(`Could not count objects with journal ID: ${journalId}`);
+    };
+    countRequest.onsuccess = () => {
+      resolve(countRequest.result);
+    };
+  });
+}
+
+// Adds new spread to the end of the journal
+export async function createNewSpreadForJournal(journalId: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
+    const objectStore = transaction.objectStore(SPREADS_STORE_NAME);
+    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
+    const id = shortIDGenerator.randomUUID();
+
+    // count how many spreads we have already to get us the `order` info
+    const numberSpreads = getNumberOfSpreadsForJournal(objectStore, journalId);
+
+    const request = objectStore.add({
+      id,
+      journalId,
+      order: numberSpreads // always add to end
     });
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);

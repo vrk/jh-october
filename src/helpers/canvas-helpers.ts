@@ -59,6 +59,7 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
 
 export async function addJournalImageToCanvas(canvas: Canvas, image: JournalImage) {
   const fabricImage = await FabricImage.fromURL(image.dataUrl);
+  fabricImage.toObject();
   addFabricObjectToCanvas(canvas, fabricImage);
 }
 

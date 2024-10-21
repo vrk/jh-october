@@ -9,8 +9,9 @@ function CreateNewJournalButton() {
   const router = useRouter();
 
   const onCreateNewJournalClicked = async () => {
-    const result = await createNewJournal();
-    router.push(`/journals/${result}`);
+    const { journal } = await createNewJournal();
+    // TODO: Maybe also pass along spread info? possibly do a refactor
+    router.push(`/journals/${journal.id}`);
   };
   return <div>
     <Button onClick={onCreateNewJournalClicked}>Create New Journal</Button>
