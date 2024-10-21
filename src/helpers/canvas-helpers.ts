@@ -1,6 +1,7 @@
 "use client";
-import { FabricObject, Canvas, util } from "fabric";
+import { FabricImage, FabricObject, Canvas, util } from "fabric";
 import { setEditableObjectProperties } from "./editable-object";
+import { JournalImage } from "./indexdb";
 
 export function setCanvasDimensionsToWindowSize(
   canvas: Canvas,
@@ -54,6 +55,11 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
   viewportTransform[5] = fabricCanvas.height / 2 - objCenter.y * viewportTransform[3];
   fabricCanvas.setViewportTransform(viewportTransform);
   fabricCanvas.renderAll();
+}
+
+export async function addJournalImageToCanvas(canvas: Canvas, image: JournalImage) {
+  const fabricImage = await FabricImage.fromURL(image.dataUrl);
+  addFabricObjectToCanvas(canvas, fabricImage);
 }
 
 export function addFabricObjectToCanvas(canvas: Canvas, object: FabricObject) {

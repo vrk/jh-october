@@ -5,6 +5,7 @@ import { FabricImage, Canvas } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
+  addJournalImageToCanvas,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
 } from "@/helpers/canvas-helpers";
@@ -15,6 +16,8 @@ import useCanvasPan from "./hooks/use-canvas-pan";
 import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
 import { useDrop } from "react-dnd";
+import { getPhotoById } from "@/helpers/indexdb";
+import { THUMBNAIL_DRAG_ACCEPT_TYPE, ThumbnailDragParameteters } from "@/helpers/drag-and-drop-helpers";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -38,12 +41,17 @@ function JournalCanvas() {
   useCanvasPan(fabricCanvas, documentRectangle);
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
-  const [collectedProps, drop] = useDrop(() => ({
-    accept: "BOX",
-    drop: (item, monitor) => {
-      console.log('dropped', item, monitor);
-    }
-  }));
+  const [_, drop] = useDrop(() => ({
+    accept: THUMBNAIL_DRAG_ACCEPT_TYPE,
+    drop: async ( { id }: ThumbnailDragParameteters ) => {
+      console.log("dropped", id);
+      if (!fabricCanvas) {
+        return;
+      }
+      const image = await getPhotoById(id);
+      await addJournalImageToCanvas(fabricCanvas, image);
+    },
+  }), [fabricCanvas]);
 
   // Create the fabric canvas
   React.useEffect(() => {

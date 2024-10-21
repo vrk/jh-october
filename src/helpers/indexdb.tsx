@@ -100,6 +100,22 @@ export async function getJournalById(id: string) {
   });
 }
 
+export async function getPhotoById(id: string): Promise<JournalImage> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(RESOURCES_STORE_NAME);
+    const objectStore = transaction.objectStore(RESOURCES_STORE_NAME);
+    console.log('id is', id);
+    const request = objectStore.get(id);
+    request.onerror = () => {
+      reject(`Requested resource ID is not found: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
 export async function createNewJournal() {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();

@@ -3,8 +3,11 @@ import style from "./PhotoTrayThumbnail.module.css";
 import Image from "next/image";
 import useIsVisible from "@/hooks/use-is-visible";
 import { JournalImage } from "@/helpers/indexdb";
-import { useDrag } from 'react-dnd'
-
+import { useDrag } from "react-dnd";
+import {
+  THUMBNAIL_DRAG_ACCEPT_TYPE,
+  ThumbnailDragParameteters,
+} from "@/helpers/drag-and-drop-helpers";
 
 type PhotoTrayThumbnailProps = {
   image: JournalImage;
@@ -19,18 +22,16 @@ function PhotoTrayThumbnail({
   onFocus,
   onBlur,
   tabIndex,
-  selected = false
+  selected = false,
 }: React.PropsWithRef<PhotoTrayThumbnailProps>) {
-  const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
-		// "type" is required. It is used by the "accept" specification of drop targets.
-    type: 'BOX',
-    item: { id: image.id },
-		// The collect function utilizes a "monitor" instance (see the Overview for what this is)
-		// to pull important pieces of state from the DnD system.
+  const dragParameter: ThumbnailDragParameteters = { id: image.id };
+  const [_, drag] = useDrag(() => ({
+    type: THUMBNAIL_DRAG_ACCEPT_TYPE,
+    item: dragParameter,
     collect: (monitor) => ({
-      isDragging: monitor.isDragging()
-    })
-  }))
+      isDragging: monitor.isDragging(),
+    }),
+  }));
 
   const imageRef = React.useRef<HTMLImageElement>(null);
   const isVisible = useIsVisible(imageRef);
@@ -47,7 +48,7 @@ function PhotoTrayThumbnail({
   }, [selected, imageRef]);
   const displayDate = image.photoTakenTime || image.lastModified;
 
-  const classNames = `${style.container} ${selected ? style.selected : ''}`; 
+  const classNames = `${style.container} ${selected ? style.selected : ""}`;
   return (
     <div role="Handle" ref={drag as any} className={classNames}>
       <Image
@@ -62,7 +63,10 @@ function PhotoTrayThumbnail({
         }}
         tabIndex={tabIndex}
         onFocus={onFocus}
-        onBlur={() => { console.log('blur item'); onBlur && onBlur() }}
+        onBlur={() => {
+          console.log("blur item");
+          onBlur && onBlur();
+        }}
       />
       <div>{new Date(displayDate).toLocaleString()}</div>
     </div>
