@@ -40,7 +40,7 @@ const ID_LENGTH = 10;
 
 export async function getDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = window.indexedDB.open(DATABASE_NAME, 1.1 /** version */);
+    const request = window.indexedDB.open(DATABASE_NAME, 2 /** version */);
     request.onerror = (event) => {
       const reason = "An error occurred with IndexedDb";
       console.error(reason, event);
@@ -199,7 +199,7 @@ export async function createNewSpreadForJournal(journalId: string) {
     const id = shortIDGenerator.randomUUID();
 
     // count how many spreads we have already to get us the `order` info
-    const numberSpreads = getNumberOfSpreadsForJournal(objectStore, journalId);
+    const numberSpreads = await getNumberOfSpreadsForJournal(objectStore, journalId);
 
     const request = objectStore.add({
       id,
