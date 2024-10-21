@@ -3,6 +3,8 @@ import style from "./PhotoTrayThumbnail.module.css";
 import Image from "next/image";
 import useIsVisible from "@/hooks/use-is-visible";
 import { JournalImage } from "@/helpers/indexdb";
+import { useDrag } from 'react-dnd'
+
 
 type PhotoTrayThumbnailProps = {
   image: JournalImage;
@@ -18,7 +20,18 @@ function PhotoTrayThumbnail({
   onBlur,
   tabIndex,
   selected = false
-}: React.PropsWithoutRef<PhotoTrayThumbnailProps>) {
+}: React.PropsWithRef<PhotoTrayThumbnailProps>) {
+  const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
+		// "type" is required. It is used by the "accept" specification of drop targets.
+    type: 'BOX',
+    item: { id: image.id },
+		// The collect function utilizes a "monitor" instance (see the Overview for what this is)
+		// to pull important pieces of state from the DnD system.
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging()
+    })
+  }))
+
   const imageRef = React.useRef<HTMLImageElement>(null);
   const isVisible = useIsVisible(imageRef);
 
@@ -36,7 +49,7 @@ function PhotoTrayThumbnail({
 
   const classNames = `${style.container} ${selected ? style.selected : ''}`; 
   return (
-    <div className={classNames}>
+    <div role="Handle" ref={drag as any} className={classNames}>
       <Image
         ref={imageRef}
         src={image.thumbDataUrl}

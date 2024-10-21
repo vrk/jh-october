@@ -14,6 +14,7 @@ import useCenterOnResize from "./hooks/use-center-on-resize";
 import useCanvasPan from "./hooks/use-canvas-pan";
 import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
+import { useDrop } from "react-dnd";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -37,13 +38,19 @@ function JournalCanvas() {
   useCanvasPan(fabricCanvas, documentRectangle);
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
+  const [collectedProps, drop] = useDrop(() => ({
+    accept: "BOX",
+    drop: (item, monitor) => {
+      console.log('dropped', item, monitor);
+    }
+  }));
 
   // Create the fabric canvas
   React.useEffect(() => {
     if (!htmlCanvas.current || !overallContainer.current) {
       return;
     }
- 
+
     console.log("vrk create canvas");
     const newlyMadeCanvas = new Canvas(htmlCanvas.current, {
       controlsAboveOverlay: true,
@@ -85,8 +92,10 @@ function JournalCanvas() {
   }, [cousinHtmlImage, fabricCanvas]);
 
   return (
-    <div ref={overallContainer} className={style.container}>
-      <canvas ref={htmlCanvas}></canvas>
+    <div ref={drop as any}>
+      <div ref={overallContainer} className={style.container}>
+        <canvas ref={htmlCanvas}></canvas>
+      </div>
     </div>
   );
 }

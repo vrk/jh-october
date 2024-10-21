@@ -4,6 +4,7 @@ import JournalGlobalNav from "@/components/JournalGlobalNav/JournalGlobalNav";
 import JournalToolbar from "@/components/JournalToolbar/JournalToolbar";
 import JournalPageNav from "@/components/JournalPageNav/JournalPageNav";
 import JournalContextProvider from "@/components/JournalContextProvider/JournalContextProvider";
+import DragAndDropProvider from "@/components/DragAndDropProvider";
 
 export default function JournalPage({
   params,
@@ -15,10 +16,12 @@ export default function JournalPage({
       <main className={styles.main}>
         <JournalContextProvider journalId={params.journalId}>
           <JournalGlobalNav></JournalGlobalNav>
-          <div className={styles.inner}>
-            <JournalToolbar></JournalToolbar>
-            <JournalCanvas></JournalCanvas>
-          </div>
+          <DragAndDropProvider>
+            <div className={styles.inner}>
+              <JournalToolbar></JournalToolbar>
+              <JournalCanvas></JournalCanvas>
+            </div>
+          </DragAndDropProvider>
           <JournalPageNav></JournalPageNav>
         </JournalContextProvider>
       </main>

@@ -16,6 +16,8 @@
     "fabric": "^6.4.3",
     "next": "14.2.14",
     "react": "^18",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18",
     "react-hotkeys-hook": "^4.5.1",
     "short-unique-id": "^5.2.0"
