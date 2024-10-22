@@ -59,16 +59,15 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
 
 export async function addJournalImageToCanvas(canvas: Canvas, image: JournalImage) {
   const fabricImage = await FabricImage.fromURL(image.dataUrl);
-  fabricImage.toObject();
-  addFabricObjectToCanvas(canvas, fabricImage);
+  addFabricImageToCanvas(canvas, fabricImage);
 }
 
-export function addFabricObjectToCanvas(canvas: Canvas, object: FabricObject) {
-  setEditableObjectProperties(object);
-  canvas.add(object);
-  canvas.bringObjectToFront(object);
-  canvas.viewportCenterObject(object);
-  canvas.setActiveObject(object);
+export function addFabricImageToCanvas(canvas: Canvas, fabricImage: FabricImage) {
+  setEditableObjectProperties(fabricImage);
+  canvas.add(fabricImage);
+  canvas.bringObjectToFront(fabricImage);
+  canvas.viewportCenterObject(fabricImage);
+  canvas.setActiveObject(fabricImage);
   canvas.requestRenderAll();
 }
 

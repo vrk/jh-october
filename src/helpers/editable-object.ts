@@ -7,10 +7,10 @@ import {
   FabricObject,
 } from "fabric";
 import ShortUniqueId from 'short-unique-id';
-import { addFabricObjectToCanvas } from "@/helpers/canvas-helpers";
+import { addFabricImageToCanvas } from "@/helpers/canvas-helpers";
 
 export function setEditableObjectProperties(object: FabricObject) {
-  // TODO: UGH hack
+  // TODO: UGH hack for undo/redo
   if (!object.id) {
     const shortIDGenerator = new ShortUniqueId({ length: 10});
     const id = shortIDGenerator.randomUUID();
@@ -157,5 +157,5 @@ export async function addImageToCanvas(
 ) {
   const image = await FabricImage.fromURL(dataUrl);
   image.id = imageId;
-  addFabricObjectToCanvas(canvas, image);
+  addFabricImageToCanvas(canvas, image);
 }
