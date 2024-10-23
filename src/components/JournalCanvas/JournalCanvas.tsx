@@ -7,6 +7,7 @@ import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   addFabricImageToCanvas,
   fitFabricImageToRectangle,
+  getFabricImageWithoutSrc as getFabricImageAsObjectWithoutSrc,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
 } from "@/helpers/canvas-helpers";
@@ -55,9 +56,9 @@ function JournalCanvas() {
       const image = await getPhotoById(id);
       const fabricImage = await FabricImage.fromURL(image.dataUrl);
       fitFabricImageToRectangle(documentRectangle, fabricImage);
+      const fabricJsMetadata = getFabricImageAsObjectWithoutSrc(fabricImage);
 
-      // TODO: Add FabricJs metadata!!
-      const spreadItem = await createSpreadItem(currentSpreadId, image.id, null);
+      const spreadItem = await createSpreadItem(currentSpreadId, image.id, fabricJsMetadata);
       augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
       addFabricImageToCanvas(fabricCanvas, fabricImage);
       console.log('we are setting the current spread items now');
@@ -74,7 +75,6 @@ function JournalCanvas() {
       return;
     }
 
-    console.log("vrk create canvas");
     const newlyMadeCanvas = new Canvas(htmlCanvas.current, {
       controlsAboveOverlay: true,
       renderOnAddRemove: false,
@@ -113,6 +113,14 @@ function JournalCanvas() {
       }
     };
   }, [cousinHtmlImage, fabricCanvas]);
+
+  // Load Spread Items
+  React.useEffect(() => {
+    if (!fabricCanvas || !cousinHtmlImage) {
+      return;
+    }
+
+  }, [fabricCanvas, cousinHtmlImage]);
 
   return (
     <div ref={drop as any}>

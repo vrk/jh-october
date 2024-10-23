@@ -1,7 +1,7 @@
 "use client";
 import { FabricImage, FabricObject, Canvas, util } from "fabric";
 import { setEditableObjectProperties } from "./editable-object";
-import { JournalImage } from "./indexdb";
+import { FabricJsMetadata, JournalImage } from "./indexdb";
 
 export function setCanvasDimensionsToWindowSize(
   canvas: Canvas,
@@ -85,6 +85,15 @@ export function addFabricImageToCanvas(
   canvas.viewportCenterObject(fabricImage);
   canvas.setActiveObject(fabricImage);
   canvas.requestRenderAll();
+}
+
+export function getFabricImageWithoutSrc(
+  fabricImage: FabricImage
+): FabricJsMetadata {
+  const metadataWithSrc = fabricImage.toObject();
+  // Get all the metadata for the fabricImage, EXCEPT for the src
+  const { src, ...fabricJsMetadata } = metadataWithSrc;
+  return fabricJsMetadata;
 }
 
 /******
