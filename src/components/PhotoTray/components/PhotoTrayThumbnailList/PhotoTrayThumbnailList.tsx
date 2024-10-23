@@ -10,13 +10,18 @@ type Props = {
   setImages: (images: Array<JournalImage>) => void;
 };
 
-function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Props>) {
-  const [selectedImageId, setSelectedImageId] = React.useState<string | null>(null);
-  console.log("SELECTED IMAGE ID IS", selectedImageId)
+function PhotoTrayThumbnailList({
+  images,
+  setImages,
+}: React.PropsWithoutRef<Props>) {
+  const [selectedImageId, setSelectedImageId] = React.useState<string | null>(
+    null
+  );
 
-  // See if selected image id is no longer valid
-  // TODO: This feels super wrong!!
-  if (selectedImageId && !images.map(i => i.id).includes(selectedImageId)){
+  // See if selected image id is no longer valid, and clear if so.
+  // This happens if `images` has updated, causing a rerender but not clearing all state.
+  // TODO: This feels a bit weird - I wanna revisit this later and see if it makes sense.
+  if (selectedImageId && !images.map((i) => i.id).includes(selectedImageId)) {
     setSelectedImageId(null);
   }
 
@@ -24,11 +29,13 @@ function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Pro
     if (!selectedImageId) {
       return;
     }
-    const selectedIndex = images.findIndex((image) => image.id === selectedImageId);
+    const selectedIndex = images.findIndex(
+      (image) => image.id === selectedImageId
+    );
     await deleteImageResource(selectedImageId);
     const newImages = images.filter((image) => image.id !== selectedImageId);
     setImages(newImages);
-    console.log('index', selectedIndex);
+    console.log("index", selectedIndex);
     if (selectedIndex >= 0) {
       if (selectedIndex < newImages.length) {
         setSelectedImageId(newImages[selectedIndex].id);
@@ -42,7 +49,13 @@ function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Pro
   useHotkeyPhotoNav(images, selectedImageId, setSelectedImageId);
 
   return (
-    <div className={style.container} onBlur={() => { console.log('blurring'); setSelectedImageId(null) }}>
+    <div
+      className={style.container}
+      onBlur={() => {
+        console.log("blurring");
+        setSelectedImageId(null);
+      }}
+    >
       {images.map((image, index) => (
         <PhotoTrayThumbnail
           key={image.id}
