@@ -279,7 +279,7 @@ export async function getUnusedImagesForJournal(
     const imageIdInSpreadItemStoreIndex = spreadItemStore.index(SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME);
 
     const unusedImagesPromises = allImagesForJournal.map((image) => {
-      return isImageInUse(imageIdInSpreadItemStoreIndex, image)
+      return nullifyIfInUse(imageIdInSpreadItemStoreIndex, image)
     });
     const unusedImagesWithNulls = await Promise.all(unusedImagesPromises);
 
@@ -288,7 +288,10 @@ export async function getUnusedImagesForJournal(
     return unusedImagesNoNulls;
 }
 
-export async function isImageInUse(
+// This is a bit of a weird function -- basically it resolves to null if the image is in use by this index,
+// or it returns itself if it's not in use. I'm using this to only grab the unused images from the store.
+// TODO: make less weird
+export async function nullifyIfInUse(
   imageIndexForSpreadItemStore: IDBIndex, image: JournalImage
 ): Promise<JournalImage|null> {
   return new Promise(async (resolve, reject) => {
@@ -298,9 +301,9 @@ export async function isImageInUse(
     };
     request.onsuccess = () => {
       if (request.result) {
-        resolve(image);
+        resolve(null);
       } else {
-        resolve(null)
+        resolve(image)
       }
     };
   });
