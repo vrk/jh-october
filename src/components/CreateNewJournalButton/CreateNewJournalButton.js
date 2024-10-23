@@ -2,14 +2,14 @@
 
 import React from 'react';
 import Button from "@/components/Button";
-import { createNewJournal } from "@/helpers/indexdb";
+import { createJournal } from "@/helpers/indexdb";
 import { useRouter } from 'next/navigation';
 
 function CreateNewJournalButton() {
   const router = useRouter();
 
   const onCreateNewJournalClicked = async () => {
-    const { journal } = await createNewJournal();
+    const { journal } = await createJournal();
     // TODO: Maybe also pass along spread info? possibly do a refactor
     router.push(`/journals/${journal.id}`);
   };

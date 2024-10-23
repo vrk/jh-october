@@ -6,7 +6,6 @@ import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   addFabricImageToCanvas,
-  addJournalImageToCanvas,
   fitFabricImageToRectangle,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
@@ -18,8 +17,9 @@ import useCanvasPan from "./hooks/use-canvas-pan";
 import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
 import { useDrop } from "react-dnd";
-import { getPhotoById } from "@/helpers/indexdb";
 import { THUMBNAIL_DRAG_ACCEPT_TYPE, ThumbnailDragParameteters } from "@/helpers/drag-and-drop-helpers";
+import { createSpreadItem, getPhotoById } from "@/helpers/indexdb";
+import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -29,6 +29,7 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
+  const { journalId, currentSpreadId } = React.useContext(JournalContext);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);

@@ -35,11 +35,17 @@ export type Journal = {
   id: string;
 };
 
+export type Spread = {
+  id: string;
+  journalId: string;
+  order: number;
+};
+
 export type SpreadItem = {
   id: string;
   spreadId: string;
   imageId: string;
-}
+};
 
 const SPREAD_ID_KEY_NAME = "spreadId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
 const IMAGES_ID_KEY_NAME = "imagesId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
@@ -74,7 +80,9 @@ export async function getDatabase(): Promise<IDBDatabase> {
       );
 
       // Create spreads table, with index into journal
-      const spreadsStore = db.createObjectStore(SPREADS_STORE_NAME, { keyPath: "id" });
+      const spreadsStore = db.createObjectStore(SPREADS_STORE_NAME, {
+        keyPath: "id",
+      });
       spreadsStore.createIndex(
         SPREADS_TO_JOURNAL_ID_INDEX_NAME,
         JOURNAL_ID_KEY_NAME,
@@ -84,7 +92,9 @@ export async function getDatabase(): Promise<IDBDatabase> {
       );
 
       // Create spreadItems table
-      const spreadItemsStore = db.createObjectStore(SPREAD_ITEMS_STORE_NAME, { keyPath: "id" });
+      const spreadItemsStore = db.createObjectStore(SPREAD_ITEMS_STORE_NAME, {
+        keyPath: "id",
+      });
       // Create an index into the spread this item belongs to
       spreadItemsStore.createIndex(
         SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME,
@@ -153,7 +163,7 @@ export async function getPhotoById(id: string): Promise<JournalImage> {
     const db = await getDatabase();
     const transaction = db.transaction(IMAGES_STORE_NAME);
     const objectStore = transaction.objectStore(IMAGES_STORE_NAME);
-    console.log('id is', id);
+    console.log("id is", id);
     const request = objectStore.get(id);
     request.onerror = () => {
       reject(`Requested resource ID is not found: ${id}`);
@@ -164,9 +174,9 @@ export async function getPhotoById(id: string): Promise<JournalImage> {
   });
 }
 
-export async function createNewJournal() {
+export async function createJournal() {
   const journal = await createNewJournalRowInDb();
-  const spread = await createNewSpreadForJournal(journal.id);
+  const spread = await createSpread(journal.id);
   return { journal, spread };
 }
 
@@ -190,9 +200,11 @@ async function createNewJournalRowInDb(): Promise<Journal> {
   });
 }
 
-async function getNumberOfSpreadsForJournal(spreadStore: IDBObjectStore, journalId: string) {
+async function getNumberOfSpreadsForJournal(
+  spreadStore: IDBObjectStore,
+  journalId: string
+): Promise<number> {
   return new Promise(async (resolve, reject) => {
-
     const journalIdIndex = spreadStore.index(SPREADS_TO_JOURNAL_ID_INDEX_NAME);
     const countRequest = journalIdIndex.count(IDBKeyRange.only(journalId));
 
@@ -206,7 +218,9 @@ async function getNumberOfSpreadsForJournal(spreadStore: IDBObjectStore, journal
 }
 
 // Adds new spread to the end of the journal
-export async function createNewSpreadForJournal(journalId: string) {
+export async function createSpread(
+  journalId: string
+): Promise<Spread> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
@@ -215,18 +229,53 @@ export async function createNewSpreadForJournal(journalId: string) {
     const id = shortIDGenerator.randomUUID();
 
     // count how many spreads we have already to get us the `order` info
-    const numberSpreads = await getNumberOfSpreadsForJournal(objectStore, journalId);
-
-    const request = objectStore.add({
+    const numberSpreads = await getNumberOfSpreadsForJournal(
+      objectStore,
+      journalId
+    );
+    const spread: Spread = {
       id,
       journalId,
-      order: numberSpreads // always add to end
+      order: numberSpreads, // always add to end for now
+    };
+    const request = objectStore.add(spread);
+    request.onerror = () => {
+      reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(spread);
+    };
+  });
+}
+
+// TODO: lol make this better if at all possible (might not be)
+export type FabricJsMetadata = any;
+
+export async function createSpreadItem(
+  journalId: string,
+  spreadId: string,
+  imageId: string,
+  fabricjsMetadata: FabricJsMetadata
+): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME, "readwrite");
+    const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
+    const id = shortIDGenerator.randomUUID();
+
+    const request = spreadItemsStore.add({
+      ...fabricjsMetadata,
+      spreadId,
+      imageId,
+      journalId,
+      id,
     });
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };
     request.onsuccess = () => {
-      resolve(request.result);
+      resolve(id);
     };
   });
 }
@@ -243,7 +292,7 @@ type JournalImageParam = {
   lastModified: number;
   photoTakeTime?: number;
 };
-export async function createNewImageResourceForJournal(
+export async function createImageResourceForJournal(
   imageInfo: JournalImageParam
 ): Promise<string> {
   return new Promise(async (resolve, reject) => {
@@ -271,29 +320,34 @@ export async function createNewImageResourceForJournal(
 export async function getUnusedImagesForJournal(
   journalId: string
 ): Promise<Array<JournalImage>> {
-    const allImagesForJournal = await getAllImagesForJournal(journalId);
+  const allImagesForJournal = await getAllImagesForJournal(journalId);
 
-    const db = await getDatabase();
-    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME);
-    const spreadItemStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
-    const imageIdInSpreadItemStoreIndex = spreadItemStore.index(SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME);
+  const db = await getDatabase();
+  const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME);
+  const spreadItemStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+  const imageIdInSpreadItemStoreIndex = spreadItemStore.index(
+    SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME
+  );
 
-    const unusedImagesPromises = allImagesForJournal.map((image) => {
-      return nullifyIfInUse(imageIdInSpreadItemStoreIndex, image)
-    });
-    const unusedImagesWithNulls = await Promise.all(unusedImagesPromises);
+  const unusedImagesPromises = allImagesForJournal.map((image) => {
+    return nullifyIfInUse(imageIdInSpreadItemStoreIndex, image);
+  });
+  const unusedImagesWithNulls = await Promise.all(unusedImagesPromises);
 
-    // Return all non-null values
-    const unusedImagesNoNulls = unusedImagesWithNulls.filter(image => image) as Array<JournalImage>;
-    return unusedImagesNoNulls;
+  // Return all non-null values
+  const unusedImagesNoNulls = unusedImagesWithNulls.filter(
+    (image) => image
+  ) as Array<JournalImage>;
+  return unusedImagesNoNulls;
 }
 
 // This is a bit of a weird function -- basically it resolves to null if the image is in use by this index,
 // or it returns itself if it's not in use. I'm using this to only grab the unused images from the store.
 // TODO: make less weird
 export async function nullifyIfInUse(
-  imageIndexForSpreadItemStore: IDBIndex, image: JournalImage
-): Promise<JournalImage|null> {
+  imageIndexForSpreadItemStore: IDBIndex,
+  image: JournalImage
+): Promise<JournalImage | null> {
   return new Promise(async (resolve, reject) => {
     const request = imageIndexForSpreadItemStore.get(image.id);
     request.onerror = () => {
@@ -303,8 +357,42 @@ export async function nullifyIfInUse(
       if (request.result) {
         resolve(null);
       } else {
-        resolve(image)
+        resolve(image);
       }
+    };
+  });
+}
+
+export async function getAllSpreadsForJournal(
+  journalId: string
+): Promise<Array<Spread>> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREADS_STORE_NAME);
+    const spreadsStore = transaction.objectStore(SPREADS_STORE_NAME);
+    const spreadsWithJournalIdIndex = spreadsStore.index(SPREADS_TO_JOURNAL_ID_INDEX_NAME);
+    const request = spreadsWithJournalIdIndex.getAll(journalId);
+    request.onerror = () => {
+      reject(`Requested journal ID is not found: ${journalId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
+export async function getAllSpreadItemIdsForSpread(spreadId: string): Promise<Array<SpreadItem>> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME);
+    const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+    const spreadItemWithSpreadIdIndex = spreadItemsStore.index(SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME);
+    const request = spreadItemWithSpreadIdIndex.getAll(spreadId);
+    request.onerror = () => {
+      reject(`Requested spreadId is not found: ${spreadId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
     };
   });
 }
@@ -327,9 +415,7 @@ export async function getAllImagesForJournal(
   });
 }
 
-export async function deleteImageResource(
-  imageId: string
-) {
+export async function deleteImageResource(imageId: string) {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(IMAGES_STORE_NAME, "readwrite");

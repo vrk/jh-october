@@ -1,7 +1,7 @@
 import * as React from "react";
 import style from "./PhotoTray.module.css";
 import {
-  createNewImageResourceForJournal,
+  createImageResourceForJournal,
   getUnusedImagesForJournal,
   JournalImage,
 } from "@/helpers/indexdb";
@@ -11,12 +11,11 @@ import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
 import DropdownSelect from "../DropdownSelect";
 import * as ExifReader from 'exifreader';
 
-
 type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
-  const [journalId] = React.useContext(JournalContext);
+  const { journalId } = React.useContext(JournalContext);
 
   // TODO: This is a lot of copies... Figure out if performance is miserable
   const [loadedImages, setLoadedImages] = React.useState<Array<JournalImage>>(
@@ -193,7 +192,7 @@ async function importImage(
     thumbHeight: thumbnail.height,
     thumbWidth: thumbnail.width,
   };
-  const imageId = await createNewImageResourceForJournal(imageInfo);
+  const imageId = await createImageResourceForJournal(imageInfo);
   imageInfo.id = imageId;
   return imageInfo;
 }
