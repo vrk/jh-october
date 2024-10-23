@@ -17,7 +17,7 @@ const SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME = "spread_item_image_id";
 
 // TODO: make this less fragile
 const JOURNAL_ID_KEY_NAME = "journalId"; // CAREFUL!! MUST MATCH JOURNALIMAGE TYPE FIELD
-export type JournalImage = {
+export type DBJournalImage = {
   id: string;
   journalId: string;
   dataUrl: string;
@@ -31,6 +31,13 @@ export type JournalImage = {
   importTime: number;
 };
 
+export type JournalImageUsageInfo = {
+  isUsedBySpreadId: string | null;
+  isUsedBySpreadItemId: string | null;
+}
+
+export type JournalImage = DBJournalImage & JournalImageUsageInfo;
+
 export type Journal = {
   id: string;
 };
@@ -41,14 +48,18 @@ export type Spread = {
   order: number;
 };
 
+// TODO: lol make this better if at all feasible (might not be)
+export type FabricJsMetadata = any;
+
 export type SpreadItem = {
   id: string;
   spreadId: string;
   imageId: string;
+  fabricjsMetadata: FabricJsMetadata;
 };
 
 const SPREAD_ID_KEY_NAME = "spreadId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
-const IMAGES_ID_KEY_NAME = "imagesId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
+const IMAGES_ID_KEY_NAME = "imageId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
 
 const ID_LENGTH = 10;
 
@@ -218,9 +229,7 @@ async function getNumberOfSpreadsForJournal(
 }
 
 // Adds new spread to the end of the journal
-export async function createSpread(
-  journalId: string
-): Promise<Spread> {
+export async function createSpread(journalId: string): Promise<Spread> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
@@ -248,15 +257,11 @@ export async function createSpread(
   });
 }
 
-// TODO: lol make this better if at all possible (might not be)
-export type FabricJsMetadata = any;
-
 export async function createSpreadItem(
-  journalId: string,
   spreadId: string,
   imageId: string,
   fabricjsMetadata: FabricJsMetadata
-): Promise<string> {
+): Promise<SpreadItem> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME, "readwrite");
@@ -264,18 +269,19 @@ export async function createSpreadItem(
     const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
     const id = shortIDGenerator.randomUUID();
 
-    const request = spreadItemsStore.add({
-      ...fabricjsMetadata,
+    const spreadItem: SpreadItem = {
+      fabricjsMetadata,
       spreadId,
       imageId,
-      journalId,
       id,
-    });
+    };
+
+    const request = spreadItemsStore.add(spreadItem);
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };
     request.onsuccess = () => {
-      resolve(id);
+      resolve(spreadItem);
     };
   });
 }
@@ -294,7 +300,7 @@ type JournalImageParam = {
 };
 export async function createImageResourceForJournal(
   imageInfo: JournalImageParam
-): Promise<string> {
+): Promise<DBJournalImage> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(IMAGES_STORE_NAME, "readwrite");
@@ -304,6 +310,8 @@ export async function createImageResourceForJournal(
 
     const object: JournalImage = {
       ...imageInfo,
+      isUsedBySpreadId: null,
+      isUsedBySpreadItemId: null,
       id,
     };
 
@@ -312,12 +320,12 @@ export async function createImageResourceForJournal(
       reject(`Could not create object with id: ${id}`);
     };
     request.onsuccess = () => {
-      resolve(id);
+      resolve(object);
     };
   });
 }
 
-export async function getUnusedImagesForJournal(
+export async function getImagesForJournalWithUsageInformation(
   journalId: string
 ): Promise<Array<JournalImage>> {
   const allImagesForJournal = await getAllImagesForJournal(journalId);
@@ -329,36 +337,28 @@ export async function getUnusedImagesForJournal(
     SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME
   );
 
-  const unusedImagesPromises = allImagesForJournal.map((image) => {
-    return nullifyIfInUse(imageIdInSpreadItemStoreIndex, image);
+  const augmentedImagesPromises = allImagesForJournal.map((image) => {
+    return getJournalImageWithUsageInfo(imageIdInSpreadItemStoreIndex, image);
   });
-  const unusedImagesWithNulls = await Promise.all(unusedImagesPromises);
-
-  // Return all non-null values
-  const unusedImagesNoNulls = unusedImagesWithNulls.filter(
-    (image) => image
-  ) as Array<JournalImage>;
-  return unusedImagesNoNulls;
+  return Promise.all(augmentedImagesPromises);
 }
 
-// This is a bit of a weird function -- basically it resolves to null if the image is in use by this index,
-// or it returns itself if it's not in use. I'm using this to only grab the unused images from the store.
-// TODO: make less weird
-export async function nullifyIfInUse(
-  imageIndexForSpreadItemStore: IDBIndex,
-  image: JournalImage
-): Promise<JournalImage | null> {
+export async function getJournalImageWithUsageInfo(
+  spreadItemStoreIndexedByImageId: IDBIndex,
+  image: DBJournalImage
+): Promise<JournalImage> {
   return new Promise(async (resolve, reject) => {
-    const request = imageIndexForSpreadItemStore.get(image.id);
+    const request = spreadItemStoreIndexedByImageId.get(image.id);
     request.onerror = () => {
       reject(`Requested imageId is not found: ${image.id}`);
     };
     request.onsuccess = () => {
-      if (request.result) {
-        resolve(null);
-      } else {
-        resolve(image);
-      }
+      console.log('usage info request', request.result);
+      const spreadItem: SpreadItem | null = request.result;
+      const augmented = image as JournalImage;
+      augmented.isUsedBySpreadId = spreadItem ? spreadItem.spreadId : null;
+      augmented.isUsedBySpreadItemId = spreadItem ? spreadItem.id : null;
+      resolve(augmented);
     };
   });
 }
@@ -370,7 +370,9 @@ export async function getAllSpreadsForJournal(
     const db = await getDatabase();
     const transaction = db.transaction(SPREADS_STORE_NAME);
     const spreadsStore = transaction.objectStore(SPREADS_STORE_NAME);
-    const spreadsWithJournalIdIndex = spreadsStore.index(SPREADS_TO_JOURNAL_ID_INDEX_NAME);
+    const spreadsWithJournalIdIndex = spreadsStore.index(
+      SPREADS_TO_JOURNAL_ID_INDEX_NAME
+    );
     const request = spreadsWithJournalIdIndex.getAll(journalId);
     request.onerror = () => {
       reject(`Requested journal ID is not found: ${journalId}`);
@@ -381,12 +383,16 @@ export async function getAllSpreadsForJournal(
   });
 }
 
-export async function getAllSpreadItemIdsForSpread(spreadId: string): Promise<Array<SpreadItem>> {
+export async function getAllSpreadItemIdsForSpread(
+  spreadId: string
+): Promise<Array<SpreadItem>> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME);
     const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
-    const spreadItemWithSpreadIdIndex = spreadItemsStore.index(SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME);
+    const spreadItemWithSpreadIdIndex = spreadItemsStore.index(
+      SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME
+    );
     const request = spreadItemWithSpreadIdIndex.getAll(spreadId);
     request.onerror = () => {
       reject(`Requested spreadId is not found: ${spreadId}`);
@@ -399,7 +405,7 @@ export async function getAllSpreadItemIdsForSpread(spreadId: string): Promise<Ar
 
 export async function getAllImagesForJournal(
   journalId: string
-): Promise<Array<JournalImage>> {
+): Promise<Array<DBJournalImage>> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(IMAGES_STORE_NAME);

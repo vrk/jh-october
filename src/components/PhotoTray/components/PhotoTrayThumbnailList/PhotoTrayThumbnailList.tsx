@@ -12,6 +12,13 @@ type Props = {
 
 function PhotoTrayThumbnailList({ images, setImages }: React.PropsWithoutRef<Props>) {
   const [selectedImageId, setSelectedImageId] = React.useState<string | null>(null);
+  console.log("SELECTED IMAGE ID IS", selectedImageId)
+
+  // See if selected image id is no longer valid
+  // TODO: This feels super wrong!!
+  if (selectedImageId && !images.map(i => i.id).includes(selectedImageId)){
+    setSelectedImageId(null);
+  }
 
   const deleteSelectedImage = async () => {
     if (!selectedImageId) {

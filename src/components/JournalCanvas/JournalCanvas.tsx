@@ -20,6 +20,7 @@ import { useDrop } from "react-dnd";
 import { THUMBNAIL_DRAG_ACCEPT_TYPE, ThumbnailDragParameteters } from "@/helpers/drag-and-drop-helpers";
 import { createSpreadItem, getPhotoById } from "@/helpers/indexdb";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
+import { augmentFabricImageWithSpreadItemMetadata } from "@/helpers/editable-object";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -29,7 +30,7 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  const { journalId, currentSpreadId } = React.useContext(JournalContext);
+  const { journalId, currentSpreadId, currentSpreadItems, setCurrentSpreadItems } = React.useContext(JournalContext);
 
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
@@ -48,13 +49,22 @@ function JournalCanvas() {
     accept: THUMBNAIL_DRAG_ACCEPT_TYPE,
     drop: async ( { id }: ThumbnailDragParameteters ) => {
       console.log("dropped", id);
-      if (!fabricCanvas || !documentRectangle) {
+      if (!fabricCanvas || !documentRectangle || !journalId || !currentSpreadId) {
         return;
       }
       const image = await getPhotoById(id);
       const fabricImage = await FabricImage.fromURL(image.dataUrl);
       fitFabricImageToRectangle(documentRectangle, fabricImage);
+
+      // TODO: Add FabricJs metadata!!
+      const spreadItem = await createSpreadItem(currentSpreadId, image.id, null);
+      augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
       addFabricImageToCanvas(fabricCanvas, fabricImage);
+      console.log('we are setting the current spread items now');
+      setCurrentSpreadItems([
+        ...currentSpreadItems,
+        spreadItem
+      ]);
     },
   }), [documentRectangle, fabricCanvas]);
 

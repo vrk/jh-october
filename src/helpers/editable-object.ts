@@ -6,17 +6,14 @@ import {
   FabricImage,
   FabricObject,
 } from "fabric";
-import ShortUniqueId from 'short-unique-id';
 import { addFabricImageToCanvas } from "@/helpers/canvas-helpers";
+import { SpreadItem } from "./indexdb";
+
+export function augmentFabricImageWithSpreadItemMetadata(image: FabricImage, spreadItem: SpreadItem) {
+  image.spreadId = spreadItem.id;
+}
 
 export function setEditableObjectProperties(object: FabricObject) {
-  // TODO: UGH hack for undo/redo
-  if (!object.id) {
-    const shortIDGenerator = new ShortUniqueId({ length: 10});
-    const id = shortIDGenerator.randomUUID();
-    object.id = id;
-  }
-
   object.set({
     transparentCorners: false,
     selectable: true,
@@ -147,15 +144,4 @@ function onCropFromBottom(eventData, transform, x, y) {
     return true;
   }
   return false;
-}
-
-
-export async function addImageToCanvas(
-  canvas: Canvas,
-  dataUrl: string,
-  imageId: string
-) {
-  const image = await FabricImage.fromURL(dataUrl);
-  image.id = imageId;
-  addFabricImageToCanvas(canvas, image);
 }

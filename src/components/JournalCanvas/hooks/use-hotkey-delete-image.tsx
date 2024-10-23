@@ -1,7 +1,11 @@
+import React from "react";
 import { Canvas } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
+import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
 function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
+  const { currentSpreadItems, setCurrentSpreadItems } =
+    React.useContext(JournalContext);
   useHotkeys(
     "Delete,Backspace",
     () => {
@@ -9,19 +13,21 @@ function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
         return;
       }
       const activeObjects = fabricCanvas.getActiveObjects();
-      // TODO: Kind of a hack to prevent deletions when editing the sidebar settings
-      if (
-        activeObjects.length === 0 ||
-        document.activeElement?.nodeName === "INPUT"
-      ) {
-        return;
-      }
+      const removedSpreadItems: Array<string> = [];
       for (const object of activeObjects) {
         fabricCanvas.remove(object);
+        if (object.spreadId) {
+          removedSpreadItems.push(object.spreadId);
+        }
       }
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
       console.log("delete");
+      setCurrentSpreadItems(
+        currentSpreadItems.filter(
+          (item) => !removedSpreadItems.includes(item.id)
+        )
+      );
     },
     { preventDefault: true },
     [fabricCanvas]
