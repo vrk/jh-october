@@ -7,7 +7,7 @@ import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   addFabricImageToCanvas,
   fitFabricImageToRectangle,
-  getFabricImageWithoutSrc as getFabricImageAsObjectWithoutSrc,
+  getFabricImageWithoutSrc,
   loadFabricImageInCanvas,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
@@ -39,6 +39,8 @@ function JournalCanvas() {
     React.useState<HTMLImageElement>();
   const [documentRectangle, setDocumentRectangle] =
     React.useState<FabricImage>();
+  const [isCousinLoaded, setIsCousinLoaded] =
+    React.useState(false);
 
   useCanvasMousewheel(fabricCanvas, documentRectangle);
   useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
@@ -57,11 +59,12 @@ function JournalCanvas() {
       const image = await getPhotoById(id);
       const fabricImage = await FabricImage.fromURL(image.dataUrl);
       fitFabricImageToRectangle(documentRectangle, fabricImage);
-      const fabricJsMetadata = getFabricImageAsObjectWithoutSrc(fabricImage);
+      addFabricImageToCanvas(fabricCanvas, fabricImage);
 
+      const fabricJsMetadata = getFabricImageWithoutSrc(fabricImage);
       const spreadItem = await createSpreadItem(currentSpreadId, image.id, fabricJsMetadata);
       augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
-      addFabricImageToCanvas(fabricCanvas, fabricImage);
+
       console.log('we are setting the current spread items now');
       setCurrentSpreadItems([
         ...currentSpreadItems,
@@ -107,6 +110,7 @@ function JournalCanvas() {
       setDocumentRectangle(rectangle);
       zoomToFitDocument(fabricCanvas, rectangle);
       fabricCanvas.requestRenderAll();
+      setIsCousinLoaded(true);
     }
     return () => {
       if (documentRectangle) {
@@ -117,7 +121,7 @@ function JournalCanvas() {
 
   // Load Spread Items
   React.useEffect(() => {
-    if (!fabricCanvas || journalLoadedStatus !== JournalLoadedStatus.Loaded) {
+    if (!fabricCanvas || !isCousinLoaded || journalLoadedStatus !== JournalLoadedStatus.Loaded) {
       return;
     }
     const imagesCurrentlyUsedInSpread = loadedImages.filter(image => image.isUsedBySpreadId === currentSpreadId);
@@ -136,7 +140,7 @@ function JournalCanvas() {
       });
     }
 
-  }, [fabricCanvas, journalLoadedStatus]);
+  }, [fabricCanvas, journalLoadedStatus, isCousinLoaded]);
 
   return (
     <div ref={drop as any}>

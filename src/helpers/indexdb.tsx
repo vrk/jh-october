@@ -433,3 +433,18 @@ export async function deleteImageResource(imageId: string) {
     };
   });
 }
+
+export async function deleteSpreadItem(spreadItemId: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME, "readwrite");
+    const spreadItemStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+    const request = spreadItemStore.delete(spreadItemId);
+    request.onerror = () => {
+      reject(`Requested spreadItemId could not be deleted: ${spreadItemId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
