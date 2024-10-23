@@ -2,7 +2,7 @@ import * as React from "react";
 import style from "./PhotoTray.module.css";
 import {
   createNewImageResourceForJournal,
-  getImagesForJournal,
+  getUnusedImagesForJournal,
   JournalImage,
 } from "@/helpers/indexdb";
 import { FabricContext } from "../FabricContextProvider";
@@ -29,7 +29,7 @@ function PhotoTray() {
     if (!journalId) {
       return;
     }
-    getImagesForJournal(journalId).then((loadedImages) => {
+    getUnusedImagesForJournal(journalId).then((loadedImages) => {
       console.log("loaded", loadedImages);
       setLoadedImages(loadedImages);
     });

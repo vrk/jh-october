@@ -14,7 +14,10 @@ export function setCanvasDimensionsToWindowSize(
   canvas.requestRenderAll();
 }
 
-export function zoomToFitDocument(fabricCanvas: Canvas, documentRectangle: FabricObject) {
+export function zoomToFitDocument(
+  fabricCanvas: Canvas,
+  documentRectangle: FabricObject
+) {
   const center = fabricCanvas.getCenterPoint();
   const scale = util.findScaleToFit(documentRectangle, fabricCanvas) * 0.9; // TODO: fix eyeballing
   fabricCanvas.zoomToPoint(center, scale);
@@ -32,7 +35,12 @@ export function zoomByDelta(canvas: Canvas, delta: number) {
   canvas.requestRenderAll();
 }
 
-export function panVerticallyByDelta(canvas: Canvas, documentRectangle: FabricObject, deltaX: number = 0, deltaY: number = 0) {
+export function panVerticallyByDelta(
+  canvas: Canvas,
+  documentRectangle: FabricObject,
+  deltaX: number = 0,
+  deltaY: number = 0
+) {
   const vpt = canvas.viewportTransform;
   vpt[4] -= deltaX;
   vpt[5] -= deltaY;
@@ -51,18 +59,26 @@ export function setCenterFromObject(fabricCanvas: Canvas, obj: FabricObject) {
   ) {
     return;
   }
-  viewportTransform[4] = fabricCanvas.width / 2 - objCenter.x * viewportTransform[0];
-  viewportTransform[5] = fabricCanvas.height / 2 - objCenter.y * viewportTransform[3];
+  viewportTransform[4] =
+    fabricCanvas.width / 2 - objCenter.x * viewportTransform[0];
+  viewportTransform[5] =
+    fabricCanvas.height / 2 - objCenter.y * viewportTransform[3];
   fabricCanvas.setViewportTransform(viewportTransform);
   fabricCanvas.renderAll();
 }
 
-export async function addJournalImageToCanvas(canvas: Canvas, image: JournalImage) {
-  const fabricImage = await FabricImage.fromURL(image.dataUrl);
-  addFabricImageToCanvas(canvas, fabricImage);
+export function fitFabricImageToRectangle(
+  documentRectangle: FabricObject,
+  fabricImage: FabricImage
+) {
+  const scale = util.findScaleToFit(fabricImage, documentRectangle) * 0.9;
+  fabricImage.scale(scale);
 }
 
-export function addFabricImageToCanvas(canvas: Canvas, fabricImage: FabricImage) {
+export function addFabricImageToCanvas(
+  canvas: Canvas,
+  fabricImage: FabricImage
+) {
   setEditableObjectProperties(fabricImage);
   canvas.add(fabricImage);
   canvas.bringObjectToFront(fabricImage);
@@ -82,7 +98,7 @@ export function enclose(canvas: Canvas, object: FabricObject) {
     br: brRaw, // bottom right
     tl: tlRaw, // top left
   } = object.aCoords;
-  console.log('ENCLOSE');
+  console.log("ENCLOSE");
 
   const T = canvas.viewportTransform;
   const br = brRaw.transform(T);

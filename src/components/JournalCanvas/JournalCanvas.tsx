@@ -5,7 +5,9 @@ import { FabricImage, Canvas } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
+  addFabricImageToCanvas,
   addJournalImageToCanvas,
+  fitFabricImageToRectangle,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
 } from "@/helpers/canvas-helpers";
@@ -45,13 +47,15 @@ function JournalCanvas() {
     accept: THUMBNAIL_DRAG_ACCEPT_TYPE,
     drop: async ( { id }: ThumbnailDragParameteters ) => {
       console.log("dropped", id);
-      if (!fabricCanvas) {
+      if (!fabricCanvas || !documentRectangle) {
         return;
       }
       const image = await getPhotoById(id);
-      await addJournalImageToCanvas(fabricCanvas, image);
+      const fabricImage = await FabricImage.fromURL(image.dataUrl);
+      fitFabricImageToRectangle(documentRectangle, fabricImage);
+      addFabricImageToCanvas(fabricCanvas, fabricImage);
     },
-  }), [fabricCanvas]);
+  }), [documentRectangle, fabricCanvas]);
 
   // Create the fabric canvas
   React.useEffect(() => {
