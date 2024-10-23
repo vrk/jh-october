@@ -174,7 +174,6 @@ export async function getPhotoById(id: string): Promise<JournalImage> {
     const db = await getDatabase();
     const transaction = db.transaction(IMAGES_STORE_NAME);
     const objectStore = transaction.objectStore(IMAGES_STORE_NAME);
-    console.log("id is", id);
     const request = objectStore.get(id);
     request.onerror = () => {
       reject(`Requested resource ID is not found: ${id}`);
@@ -353,7 +352,6 @@ export async function getJournalImageWithUsageInfo(
       reject(`Requested imageId is not found: ${image.id}`);
     };
     request.onsuccess = () => {
-      console.log('usage info request', request.result);
       const spreadItem: SpreadItem | null = request.result;
       const augmented = image as JournalImage;
       augmented.isUsedBySpreadId = spreadItem ? spreadItem.spreadId : null;

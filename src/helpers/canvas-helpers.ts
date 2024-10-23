@@ -87,6 +87,15 @@ export function addFabricImageToCanvas(
   canvas.requestRenderAll();
 }
 
+export function loadFabricImageInCanvas(
+  canvas: Canvas,
+  fabricImage: FabricImage
+) {
+  setEditableObjectProperties(fabricImage);
+  canvas.add(fabricImage);
+  canvas.requestRenderAll();
+}
+
 export function getFabricImageWithoutSrc(
   fabricImage: FabricImage
 ): FabricJsMetadata {

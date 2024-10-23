@@ -1,13 +1,14 @@
 "use client";
 import React from "react";
 
-import { FabricImage, Canvas } from "fabric";
+import { FabricImage, Canvas, util } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
   addFabricImageToCanvas,
   fitFabricImageToRectangle,
   getFabricImageWithoutSrc as getFabricImageAsObjectWithoutSrc,
+  loadFabricImageInCanvas,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
 } from "@/helpers/canvas-helpers";
@@ -20,7 +21,7 @@ import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
 import { useDrop } from "react-dnd";
 import { THUMBNAIL_DRAG_ACCEPT_TYPE, ThumbnailDragParameteters } from "@/helpers/drag-and-drop-helpers";
 import { createSpreadItem, getPhotoById } from "@/helpers/indexdb";
-import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
+import { JournalContext, JournalLoadedStatus } from "../JournalContextProvider/JournalContextProvider";
 import { augmentFabricImageWithSpreadItemMetadata } from "@/helpers/editable-object";
 
 const DEFAULT_PPI = 300;
@@ -31,11 +32,9 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 function JournalCanvas() {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  const { journalId, currentSpreadId, currentSpreadItems, setCurrentSpreadItems } = React.useContext(JournalContext);
-
+  const { journalId, currentSpreadId, journalLoadedStatus, currentSpreadItems, setCurrentSpreadItems, loadedImages } = React.useContext(JournalContext);
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
-
   const [cousinHtmlImage, setCousinHtmlImage] =
     React.useState<HTMLImageElement>();
   const [documentRectangle, setDocumentRectangle] =
@@ -46,6 +45,8 @@ function JournalCanvas() {
   useCanvasPan(fabricCanvas, documentRectangle);
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
+
+  // Handle drag & drop from the photo toolbar
   const [_, drop] = useDrop(() => ({
     accept: THUMBNAIL_DRAG_ACCEPT_TYPE,
     drop: async ( { id }: ThumbnailDragParameteters ) => {
@@ -67,7 +68,7 @@ function JournalCanvas() {
         spreadItem
       ]);
     },
-  }), [documentRectangle, fabricCanvas]);
+  }), [documentRectangle, fabricCanvas, currentSpreadItems, journalId, currentSpreadId]);
 
   // Create the fabric canvas
   React.useEffect(() => {
@@ -116,11 +117,26 @@ function JournalCanvas() {
 
   // Load Spread Items
   React.useEffect(() => {
-    if (!fabricCanvas || !cousinHtmlImage) {
+    if (!fabricCanvas || journalLoadedStatus !== JournalLoadedStatus.Loaded) {
       return;
     }
+    const imagesCurrentlyUsedInSpread = loadedImages.filter(image => image.isUsedBySpreadId === currentSpreadId);
+    for (const image of imagesCurrentlyUsedInSpread) {
+      const spreadItem = currentSpreadItems.find(spreadItem => spreadItem.imageId === image.id);
+      if (!spreadItem) {
+        throw new Error('assertion error')
+      }
+      const fabricObjectData = spreadItem.fabricjsMetadata; 
+      fabricObjectData.src = image.dataUrl;
+      // TODO: See if there's benefit of doing this all in a batch
+      util.enlivenObjects([ fabricObjectData ]).then(([ object ]) => {
+        const fabricImage = object as FabricImage;
+        fabricImage.spreadItemId = spreadItem.id;
+        loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
+      });
+    }
 
-  }, [fabricCanvas, cousinHtmlImage]);
+  }, [fabricCanvas, journalLoadedStatus]);
 
   return (
     <div ref={drop as any}>

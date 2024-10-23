@@ -33,6 +33,7 @@ function PhotoTray() {
     button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
   }
   const unusedImages = loadedImages.filter(image => image.isUsedBySpreadId === null);
+  console.log('new loaded images', loadedImages);
 
   sortImages(selectedSortBy, unusedImages);
   return (

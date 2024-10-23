@@ -10,7 +10,7 @@ import { addFabricImageToCanvas } from "@/helpers/canvas-helpers";
 import { SpreadItem } from "./indexdb";
 
 export function augmentFabricImageWithSpreadItemMetadata(image: FabricImage, spreadItem: SpreadItem) {
-  image.spreadId = spreadItem.id;
+  image.spreadItemId = spreadItem.id;
 }
 
 export function setEditableObjectProperties(object: FabricObject) {

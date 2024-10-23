@@ -35,7 +35,6 @@ function PhotoTrayThumbnailList({
     await deleteImageResource(selectedImageId);
     const newImages = images.filter((image) => image.id !== selectedImageId);
     setImages(newImages);
-    console.log("index", selectedIndex);
     if (selectedIndex >= 0) {
       if (selectedIndex < newImages.length) {
         setSelectedImageId(newImages[selectedIndex].id);
@@ -52,7 +51,6 @@ function PhotoTrayThumbnailList({
     <div
       className={style.container}
       onBlur={() => {
-        console.log("blurring");
         setSelectedImageId(null);
       }}
     >

@@ -11,6 +11,7 @@ import {
   getImagesForJournalWithUsageInformation,
   JournalImage,
 } from "@/helpers/indexdb";
+import { initialize } from "next/dist/server/lib/render-server";
 
 type JournalContextType = {
   journalId: string | null;
@@ -18,6 +19,7 @@ type JournalContextType = {
   allSpreads: Array<Spread>;
   currentSpreadItems: Array<SpreadItem>;
   loadedImages: Array<JournalImage>;
+  journalLoadedStatus: JournalLoadedStatus;
   setLoadedImages: (loadedImages: Array<JournalImage>) => void;
   setCurrentSpreadId: (currentSpreadId: string) => void;
   setAllSpreads: (allSpreads: Array<Spread>) => void;
@@ -28,12 +30,19 @@ type JournalContextProps = {
   journalId: string;
 };
 
+export enum JournalLoadedStatus {
+  Uninitialized,
+  Loading,
+  Loaded
+}
+
 export const JournalContext = React.createContext<JournalContextType>({
   journalId: null,
   currentSpreadId: null,
   allSpreads: [],
   currentSpreadItems: [],
   loadedImages: [],
+  journalLoadedStatus: JournalLoadedStatus.Uninitialized,
   setLoadedImages: () => {},
   setCurrentSpreadId: () => {},
   setAllSpreads: () => {},
@@ -54,82 +63,100 @@ const JournalContextProvider = ({
   const [loadedImages, setLoadedImages] = React.useState<Array<JournalImage>>(
     []
   );
+  const [journalLoadedStatus, setJournalLoadedStatus] = React.useState(JournalLoadedStatus.Uninitialized);
 
+  const initalizeContext = async () => {
+    // Get all the spreads
+    const allSpreads = await getAllSpreadsForJournal(journalId);
+
+    if (allSpreads.length === 0) {
+      throw new Error("assertion error");
+    }
+    const [ firstSpread ] = allSpreads;
+    setCurrentSpreadId(firstSpread.id);
+
+    // Get all the spread items
+    const spreadItems = await getAllSpreadItemIdsForSpread(firstSpread.id);
+    console.log('initial state', spreadItems);
+    setCurrentSpreadItems(spreadItems);
+
+    // Now load all the images
+    const loadedImages = await getImagesForJournalWithUsageInformation(journalId);
+    setLoadedImages(loadedImages);
+  };
+  
   React.useEffect(() => {
-    getAllSpreadsForJournal(journalId).then((spreads) => {
-      setAllSpreads(spreads);
-      if (spreads.length >= 1) {
-        setCurrentSpreadId(spreads[0].id);
+    console.log('current spread items', currentSpreadItems);
+      for (const item of currentSpreadItems) {
+        console.log(`-- FINAL item ${item.id} has image id:`, item.imageId);
       }
-    });
-  }, [setAllSpreads, setCurrentSpreadId]);
+  }, [currentSpreadItems]);
 
   React.useEffect(() => {
-    if (!currentSpreadId) {
-      return;
-    }
-    getAllSpreadItemIdsForSpread(currentSpreadId).then((spreadItems) => {
-      setCurrentSpreadItems(spreadItems);
-    });
-  }, [currentSpreadId, setCurrentSpreadItems]);
+    setJournalLoadedStatus(JournalLoadedStatus.Loading);
+    initalizeContext().then(() => {
+      setJournalLoadedStatus(JournalLoadedStatus.Loaded);
+    })
+  }, []);
 
-  // Load all the images
-  React.useEffect(() => {
-    if (!journalId) {
-      return;
-    }
-    getImagesForJournalWithUsageInformation(journalId).then((loadedImages) => {
-      console.log("loaded", loadedImages);
-      setLoadedImages(loadedImages);
-    });
-  }, [journalId, setLoadedImages]);
 
   // Update the loaded images based on changes to the current spread items
   // A bit hacky
   // TODO: see if there's a more elegant way
   React.useEffect(() => {
-    console.log("udating images or at least attempting to", loadedImages);
-    setLoadedImages((loadedImages) => {
-      const imageIdsCurrentlyUsedInSpread = currentSpreadItems.map(
-        (item) => item.imageId
-      );
-
-      // Get the images that had been being used in this spread.
-      const imagesPreviouslyUsedInThisSpread = loadedImages.filter(
-        (image) => image.isUsedBySpreadId === currentSpreadId
-      );
-
-      // Check whether or not it's still being used.
-      for (const loadedImage of imagesPreviouslyUsedInThisSpread) {
-        // If not, update state accordingly.
-        if (!imageIdsCurrentlyUsedInSpread.includes(loadedImage.id)) {
-          loadedImage.isUsedBySpreadId = null;
-          loadedImage.isUsedBySpreadItemId = null;
-        }
+      for (const item of currentSpreadItems) {
+        console.log(`-- FINAL ANOTHER item ${item.id} has image id:`, item.imageId);
       }
+    console.log("updating images or at least attempting to", loadedImages);
 
+    const imageIdsCurrentlyUsedInSpread = currentSpreadItems.map(
+      (item) => item.imageId
+    );
+
+    const yepItsABigCopyOhWell = [...loadedImages];
+
+    for (const item of currentSpreadItems) {
+      console.log(`-- item being used is:`, item);
+    }
+
+    // Get the images that had been being used in this spread.
+    const imagesPreviouslyUsedInThisSpread = yepItsABigCopyOhWell.filter(
+      (image) => image.isUsedBySpreadId === currentSpreadId
+    );
+
+    // Check whether or not it's still being used.
+    for (const loadedImage of imagesPreviouslyUsedInThisSpread) {
+      // If not, update state accordingly.
+      if (!imageIdsCurrentlyUsedInSpread.includes(loadedImage.id)) {
+        console.log("NOT BEING USED ANYMORE", loadedImage.id);
+        loadedImage.isUsedBySpreadId = null;
+        loadedImage.isUsedBySpreadItemId = null;
+      }
+    }
       // Now get all the images used in the spread
-      const imagesCurrentlyUsedInSpread = loadedImages.filter((image) =>
+      const imagesCurrentlyUsedInSpread = yepItsABigCopyOhWell.filter((image) =>
         imageIdsCurrentlyUsedInSpread.includes(image.id)
       );
       for (const loadedImage of imagesCurrentlyUsedInSpread) {
         loadedImage.isUsedBySpreadId = currentSpreadId;
         const spreadItem = currentSpreadItems.find(
-          (el) => (el.imageId = loadedImage.id)
+          (el) => (el.imageId === loadedImage.id)
         );
         if (!spreadItem) {
           throw new Error("coding error");
         }
+          console.log("its BEING USED", spreadItem.id, loadedImage.id);
         loadedImage.isUsedBySpreadItemId = spreadItem.id;
       }
-      return [...loadedImages];
-    });
+
+    setLoadedImages(yepItsABigCopyOhWell);
   }, [currentSpreadItems, setLoadedImages]);
 
   return (
     <JournalContext.Provider
       value={{
         journalId,
+        journalLoadedStatus,
         currentSpreadId,
         setCurrentSpreadId,
         allSpreads,
