@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Canvas, FabricImage, ImageFormat } from "fabric";
+import { Canvas, FabricImage, ImageFormat, filters } from "fabric";
 import {
   addFabricImageToCanvas,
   getFabricImageWithoutSrc,
@@ -41,6 +41,15 @@ function useSaveSpreadSnapshot(
       }
 
       clonedCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+      for (const object of clonedCanvas.getObjects()) {
+        if (object.backgroundId) {
+          continue;
+        }
+        const fabricImage = object as FabricImage;
+        const resizeFilter = new filters.Resize();
+        resizeFilter.resizeType = 'lanczos';
+        fabricImage.applyFilters([resizeFilter]);
+      }
 
       const { top, left, width, height } = clonedBackground.getBoundingRect();
       const format: ImageFormat = "png";
@@ -52,7 +61,7 @@ function useSaveSpreadSnapshot(
         height,
         left,
         top,
-        multiplier: 0.25,
+        multiplier: 0.2,
       };
       const dataUrl = clonedCanvas.toDataURL(options);
 

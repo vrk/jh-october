@@ -1,5 +1,5 @@
 "use client";
-import { FabricImage, FabricObject, Canvas, util } from "fabric";
+import { FabricImage, FabricObject, Canvas, util, filters } from "fabric";
 import { setEditableObjectProperties } from "./editable-object";
 import { FabricJsMetadata, JournalImage } from "./indexdb";
 
@@ -84,6 +84,9 @@ export function addFabricImageToCanvas(
   canvas.bringObjectToFront(fabricImage);
   canvas.viewportCenterObject(fabricImage);
   canvas.setActiveObject(fabricImage);
+  const resizeFilter = new filters.Resize();
+  resizeFilter.resizeType = 'lanczos';
+  fabricImage.applyFilters([resizeFilter]);
   canvas.requestRenderAll();
 }
 
@@ -94,6 +97,10 @@ export function loadFabricImageInCanvas(
   setEditableObjectProperties(fabricImage);
   canvas.add(fabricImage);
   canvas.bringObjectToFront(fabricImage);
+  const resizeFilter = new filters.Resize();
+  resizeFilter.resizeType = 'lanczos';
+  fabricImage.applyFilters([resizeFilter]);
+  console.log('RESIZE');
   canvas.requestRenderAll();
 }
 
