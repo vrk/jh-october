@@ -12,6 +12,8 @@ export function augmentFabricImageWithSpreadItemMetadata(
   spreadItem: SpreadItem
 ) {
   image.spreadItemId = spreadItem.id;
+  image.imageId = spreadItem.imageId;
+  image.spreadId = spreadItem.spreadId;
 }
 
 export function setEditableObjectProperties(object: FabricObject) {

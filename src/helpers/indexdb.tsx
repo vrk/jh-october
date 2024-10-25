@@ -34,7 +34,7 @@ export type DBJournalImage = {
 export type JournalImageUsageInfo = {
   isUsedBySpreadId: string | null;
   isUsedBySpreadItemId: string | null;
-}
+};
 
 export type JournalImage = DBJournalImage & JournalImageUsageInfo;
 
@@ -261,12 +261,31 @@ export async function createSpreadItem(
   imageId: string,
   fabricjsMetadata: FabricJsMetadata
 ): Promise<SpreadItem> {
+  const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
+  const id = shortIDGenerator.randomUUID();
+  return createSpreadItemInDatabase(id, spreadId, imageId, fabricjsMetadata);
+}
+
+export async function updateSpreadItem(
+  id: string,
+  spreadId: string,
+  imageId: string,
+  fabricjsMetadata: FabricJsMetadata
+): Promise<SpreadItem> {
+  return createSpreadItemInDatabase(id, spreadId, imageId, fabricjsMetadata, true);
+}
+
+async function createSpreadItemInDatabase(
+  id: string,
+  spreadId: string,
+  imageId: string,
+  fabricjsMetadata: FabricJsMetadata,
+  usePut = false
+): Promise<SpreadItem> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME, "readwrite");
     const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
-    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
-    const id = shortIDGenerator.randomUUID();
 
     const spreadItem: SpreadItem = {
       fabricjsMetadata,
@@ -275,7 +294,9 @@ export async function createSpreadItem(
       id,
     };
 
-    const request = spreadItemsStore.add(spreadItem);
+    const request = usePut
+      ? spreadItemsStore.put(spreadItem)
+      : spreadItemsStore.add(spreadItem);
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };

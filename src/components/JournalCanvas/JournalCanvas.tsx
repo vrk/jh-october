@@ -20,6 +20,8 @@ import {
   JournalLoadedStatus,
 } from "../JournalContextProvider/JournalContextProvider";
 import useReceiveDragDropFromToolbox from "./hooks/use-receive-drag-drop-from-toolbox";
+import useAutoSaveCanvas from "./hooks/use-auto-save-canvas";
+import { augmentFabricImageWithSpreadItemMetadata } from "@/helpers/editable-object";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -48,6 +50,7 @@ function JournalCanvas() {
   useCanvasPan(fabricCanvas, documentRectangle);
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
+  useAutoSaveCanvas(fabricCanvas);
   const drop = useReceiveDragDropFromToolbox(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas
@@ -121,7 +124,7 @@ function JournalCanvas() {
       // TODO: See if there's benefit of doing this all in a batch
       util.enlivenObjects([fabricObjectData]).then(([object]) => {
         const fabricImage = object as FabricImage;
-        fabricImage.spreadItemId = spreadItem.id;
+        augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
         loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
       });
     }
