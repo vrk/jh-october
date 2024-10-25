@@ -97,13 +97,45 @@ export function loadFabricImageInCanvas(
   canvas.requestRenderAll();
 }
 
+function getActualTopLeftCoordinates(group: FabricObject, image: FabricImage) {
+  const objectLeft = image.left;
+  const objectTop = image.top;
+  const groupLeft = group.left;
+  const groupTop = group.top;
+  const objectInGroupLeft = objectLeft + groupLeft + group.width / 2;
+  const objectInGroupTop = objectTop + groupTop + group.height / 2;
+  return {
+    objectInGroupLeft,
+    objectInGroupTop,
+  };
+}
 
 export function getFabricImageWithoutSrc(
+  fabricCanvas: Canvas,
   fabricImage: FabricImage
 ): FabricJsMetadata {
   const metadataWithSrc = fabricImage.toObject();
+
   // Get all the metadata for the fabricImage, EXCEPT for the src
   const { src, ...fabricJsMetadata } = metadataWithSrc;
+
+  // If this object part of a group selection, its top and left values are calculated relative to the group selection.
+  // We don't want to save _those_ values; we want to save its actual top and left coordinates. So check for this scenario
+  // and get the actual top & left if we're part of a selection.
+  // https://stackoverflow.com/questions/71356612/why-top-and-left-properties-become-negative-after-selection-fabricjs
+  const activeSelection = fabricCanvas.getActiveObject();
+  if (
+    activeSelection &&
+    activeSelection.type.toLowerCase() === "activeselection"
+  ) {
+    const { objectInGroupLeft, objectInGroupTop } = getActualTopLeftCoordinates(
+      activeSelection,
+      fabricImage
+    );
+    fabricJsMetadata.top = objectInGroupTop;
+    fabricJsMetadata.left = objectInGroupLeft;
+  }
+
   return fabricJsMetadata;
 }
 

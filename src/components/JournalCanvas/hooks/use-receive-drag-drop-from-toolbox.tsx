@@ -33,7 +33,7 @@ function useReceiveDragDropFromToolbox(
       fitFabricImageToRectangle(documentRectangle, fabricImage);
       addFabricImageToCanvas(fabricCanvas, fabricImage);
 
-      const fabricJsMetadata = getFabricImageWithoutSrc(fabricImage);
+      const fabricJsMetadata = getFabricImageWithoutSrc(fabricCanvas, fabricImage);
       const spreadItem = await createSpreadItem(currentSpreadId, image.id, fabricJsMetadata);
       augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
 

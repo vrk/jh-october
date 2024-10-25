@@ -26,7 +26,7 @@ function useAutoSaveCanvas(
       const savePromises = [];
       for (const object of allObjects) {
         const fabricImage = object as FabricImage;
-        const fabricJsMetadata = getFabricImageWithoutSrc(fabricImage);
+        const fabricJsMetadata = getFabricImageWithoutSrc(fabricCanvas, fabricImage);
         if (!object.spreadItemId || !object.spreadId || !object.imageId) {
           continue;
         }
