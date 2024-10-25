@@ -15,14 +15,9 @@ import useCenterOnResize from "./hooks/use-center-on-resize";
 import useCanvasPan from "./hooks/use-canvas-pan";
 import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
-import {
-  JournalContext,
-  JournalLoadedStatus,
-} from "../JournalContextProvider/JournalContextProvider";
 import useReceiveDragDropFromToolbox from "./hooks/use-receive-drag-drop-from-toolbox";
 import useAutoSaveCanvas from "./hooks/use-auto-save-canvas";
 import { augmentFabricImageWithSpreadItemMetadata, BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
-import useSaveSpreadSnapshot from "./hooks/use-save-spread-snapshot";
 import { JournalImage, SpreadItem } from "@/helpers/indexdb";
 
 const DEFAULT_PPI = 300;
@@ -55,6 +50,7 @@ function JournalCanvas({
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
   useAutoSaveCanvas(fabricCanvas);
+  // Disable because too slow performance-wise
   // useSaveSpreadSnapshot(fabricCanvas, documentRectangle);
   const drop = useReceiveDragDropFromToolbox(fabricCanvas, documentRectangle);
 

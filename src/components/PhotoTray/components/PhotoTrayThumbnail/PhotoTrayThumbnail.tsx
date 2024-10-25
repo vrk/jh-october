@@ -63,9 +63,7 @@ function PhotoTrayThumbnail({
         }}
         tabIndex={tabIndex}
         onFocus={onFocus}
-        onBlur={() => {
-          onBlur && onBlur();
-        }}
+        onBlur={onBlur}
       />
       <div>{new Date(displayDate).toLocaleString()}</div>
     </div>

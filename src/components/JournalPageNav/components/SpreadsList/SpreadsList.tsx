@@ -6,10 +6,21 @@ import SpreadListItem from "../SpreadListItem";
 
 function SpreadsList() {
   const { allSpreads } = React.useContext(JournalContext);
+
+  const [selectedThumbnailId, setSelectedThumbnailId] = React.useState<
+    string | null
+  >(null);
   return (
     <div className={style.container}>
-      {allSpreads.map((spread) => (
-        <SpreadListItem key={spread.id} spread={spread}></SpreadListItem>
+      {allSpreads.map((spread, index) => (
+        <SpreadListItem
+          key={spread.id}
+          spread={spread}
+          isSelected={selectedThumbnailId == spread.id}
+          tabIndex={index}
+          onBlur={() => setSelectedThumbnailId(null)}
+          onFocus={() => setSelectedThumbnailId(spread.id)}
+        ></SpreadListItem>
       ))}
     </div>
   );

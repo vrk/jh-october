@@ -3,13 +3,23 @@ import style from "./SpreadListItem.module.css";
 import { Spread } from "@/helpers/indexdb";
 import Image from "next/image";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
-import hobonichiCousinimage from "@/components/JournalCanvas/images/hobonichi-cousin-spread.png"
+import hobonichiCousinimage from "@/components/JournalCanvas/images/hobonichi-cousin-spread.png";
 
 type Props = {
   spread: Spread;
+  isSelected: boolean;
+  tabIndex: number;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
-function SpreadListItem({ spread }: React.PropsWithRef<Props>) {
+function SpreadListItem({
+  spread,
+  isSelected,
+  tabIndex,
+  onFocus,
+  onBlur,
+}: React.PropsWithRef<Props>) {
   const { setCurrentSpreadId } = React.useContext(JournalContext);
   let inner = <></>;
   const onSelectImage = () => {
@@ -29,7 +39,10 @@ function SpreadListItem({ spread }: React.PropsWithRef<Props>) {
           maxHeight: "100%",
           width: "auto",
         }}
+        tabIndex={tabIndex}
         onClick={onSelectImage}
+        onFocus={onFocus}
+        onBlur={onBlur}
         alt={`preview for page ${spread.order}`}
       ></Image>
     );
@@ -43,12 +56,16 @@ function SpreadListItem({ spread }: React.PropsWithRef<Props>) {
           maxHeight: "100%",
           width: "auto",
         }}
+        tabIndex={tabIndex}
         onClick={onSelectImage}
+        onFocus={onFocus}
+        onBlur={onBlur}
         alt={`preview for page ${spread.order}`}
       ></Image>
     );
   }
-  return <div className={style.container}>{inner}</div>;
+  const classNames = `${style.container} ${isSelected ? style.selected : ""}`;
+  return <div className={classNames}>{inner}</div>;
 }
 
 export default SpreadListItem;
