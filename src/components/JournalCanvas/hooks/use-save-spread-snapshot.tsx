@@ -51,7 +51,7 @@ function useSaveSpreadSnapshot(
         fabricImage.applyFilters([resizeFilter]);
       }
 
-      const { top, left, width, height } = clonedBackground.getBoundingRect();
+      const { top, left, width, height } = clonedBackground;
       const format: ImageFormat = "png";
       const options = {
         name: "New Image",

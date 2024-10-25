@@ -14,7 +14,7 @@ type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
-  const { journalId, loadedImages, setLoadedImages, currentSpreadId, currentSpreadItems } = React.useContext(JournalContext);
+  const { journalId, loadedImages, setLoadedImages } = React.useContext(JournalContext);
 
   const [selectedSortBy, setSelectedSortBy] =
     React.useState<SortBy>("importTime");
