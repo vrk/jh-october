@@ -21,7 +21,8 @@ import {
 } from "../JournalContextProvider/JournalContextProvider";
 import useReceiveDragDropFromToolbox from "./hooks/use-receive-drag-drop-from-toolbox";
 import useAutoSaveCanvas from "./hooks/use-auto-save-canvas";
-import { augmentFabricImageWithSpreadItemMetadata } from "@/helpers/editable-object";
+import { augmentFabricImageWithSpreadItemMetadata, BACKGROUND_ID_KEY, BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
+import useSaveSpreadSnapshot from "./hooks/use-save-spread-snapshot";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -51,6 +52,7 @@ function JournalCanvas() {
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
   useAutoSaveCanvas(fabricCanvas);
+  useSaveSpreadSnapshot(fabricCanvas, documentRectangle);
   const drop = useReceiveDragDropFromToolbox(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas
@@ -86,6 +88,7 @@ function JournalCanvas() {
   React.useEffect(() => {
     if (fabricCanvas && cousinHtmlImage) {
       const rectangle = createFabricImageForCousin(cousinHtmlImage);
+      rectangle.backgroundId = BACKGROUND_ID_VALUE;
       fabricCanvas.add(rectangle);
       fabricCanvas.centerObject(rectangle);
       setDocumentRectangle(rectangle);

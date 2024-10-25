@@ -7,6 +7,9 @@ import {
 } from "fabric";
 import { SpreadItem } from "./indexdb";
 
+export const BACKGROUND_ID_VALUE = '__background__';
+export const PROPERTIES_TO_INCLUDE_IN_CLONES = ['backgroundId', 'spreadItemId', 'imageId', 'spreadId'];
+
 export function augmentFabricImageWithSpreadItemMetadata(
   image: FabricImage,
   spreadItem: SpreadItem

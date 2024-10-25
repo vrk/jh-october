@@ -12,7 +12,6 @@ function useAutoSaveCanvas(
   const [needsSaveTimeoutId, setNeedsSaveTimeoutId] =
     React.useState<NodeJS.Timeout | null>(null);
   const onCanvasObjectModified = () => {
-    console.log('object modified~!');
     if (needsSaveTimeoutId) {
       clearTimeout(needsSaveTimeoutId);
     }
@@ -39,9 +38,7 @@ function useAutoSaveCanvas(
         savePromises.push(savePromise);
       }
 
-      console.log('saving');
       await Promise.all(savePromises);
-      console.log('done');
     }, AUTO_SAVE_DELAY_MS);
     setNeedsSaveTimeoutId(newTimeoutId);
   };
