@@ -130,7 +130,6 @@ function JournalCanvas() {
       }
       const fabricObjectData = spreadItem.fabricjsMetadata; 
       fabricObjectData.src = image.dataUrl;
-      console.log('spread item load', spreadItem);
       // TODO: See if there's benefit of doing this all in a batch
       util.enlivenObjects([ fabricObjectData ]).then(([ object ]) => {
         const fabricImage = object as FabricImage;

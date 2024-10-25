@@ -17,7 +17,6 @@ function useHotkeyZoom(
         return;
       }
       zoomByDelta(fabricCanvas, -100);
-      console.log("zoom in");
     },
     { preventDefault: true },
     [fabricCanvas]
@@ -25,12 +24,10 @@ function useHotkeyZoom(
   useHotkeys(
     "meta+minus",
     () => {
-      console.log("zoom out before");
       if (!fabricCanvas) {
         return;
       }
       zoomByDelta(fabricCanvas, 100);
-      console.log("zoom out");
     },
     { preventDefault: true },
     [fabricCanvas]
@@ -42,7 +39,6 @@ function useHotkeyZoom(
         return;
       }
       zoomToFitDocument(fabricCanvas, documentRectangle);
-      console.log("zoom reset");
     },
     { preventDefault: true },
     [fabricCanvas, documentRectangle]

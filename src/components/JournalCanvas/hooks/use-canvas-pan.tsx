@@ -14,7 +14,6 @@ function useCanvasPan(
   useHotkeys(" ", () => {
     if (isSpacebarPressed) {return }
     setIsSpacebarPressed(true);
-    console.log('is pressed');
     // TODO: Figure out why this doesn't work well
     fabricCanvas?.setCursor("grab");
   }, [isSpacebarPressed, fabricCanvas], {
@@ -25,7 +24,6 @@ function useCanvasPan(
   useHotkeys(" ", () => {
     setIsSpacebarPressed(false);
     fabricCanvas?.setCursor("default");
-    console.log('default');
   }, [isSpacebarPressed], {
     keyup: true,
     keydown: false,
@@ -82,7 +80,6 @@ function useCanvasPan(
       setIsDragging(true);
       setLastPosX(clientX);
       setLastPosY(clientY);
-      console.log("set last pos");
       fabricCanvas.selection = false; // disable selection while grabbing
     };
     fabricCanvas.on("mouse:down", onMouseDown);

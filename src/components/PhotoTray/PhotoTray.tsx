@@ -33,7 +33,6 @@ function PhotoTray() {
     button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
   }
   const unusedImages = loadedImages.filter(image => image.isUsedBySpreadId === null);
-  console.log('new loaded images', loadedImages);
 
   sortImages(selectedSortBy, unusedImages);
   return (
@@ -162,7 +161,6 @@ async function importImage(
       // TODO: FIX HACK!!!!
       let hackedDate = imageDate.replace(':', "-");
       hackedDate = hackedDate.replace(':', '-');
-      console.log('tags', hackedDate, Date.parse(hackedDate));
       photoTakenTime = Date.parse(hackedDate);
     }
   }
