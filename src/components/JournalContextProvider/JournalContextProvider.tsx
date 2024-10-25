@@ -68,6 +68,10 @@ const JournalContextProvider = ({
   const initalizeContext = async () => {
     // Get all the spreads
     const allSpreads = await getAllSpreadsForJournal(journalId);
+    allSpreads.sort((a, b) => {
+      return a.order - b.order;
+    })
+    console.log(allSpreads)
 
     if (allSpreads.length === 0) {
       throw new Error("assertion error");
