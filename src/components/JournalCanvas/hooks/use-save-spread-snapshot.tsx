@@ -20,7 +20,6 @@ function useSaveSpreadSnapshot(
     React.useState<NodeJS.Timeout | null>(null);
 
   const onCanvasObjectModified = () => {
-    console.log("modified");
     if (needsSaveTimeoutId) {
       clearTimeout(needsSaveTimeoutId);
     }
@@ -33,6 +32,7 @@ function useSaveSpreadSnapshot(
       const clonedCanvas = await fabricCanvas.clone(
         PROPERTIES_TO_INCLUDE_IN_CLONES
       );
+      console.log('CLONE');
       const [clonedBackground] = clonedCanvas
         .getObjects()
         .filter((o) => o.backgroundId === BACKGROUND_ID_VALUE);

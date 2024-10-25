@@ -100,7 +100,6 @@ export function loadFabricImageInCanvas(
   const resizeFilter = new filters.Resize();
   resizeFilter.resizeType = 'lanczos';
   fabricImage.applyFilters([resizeFilter]);
-  console.log('RESIZE');
   canvas.requestRenderAll();
 }
 
@@ -122,6 +121,7 @@ export function getFabricImageWithoutSrc(
   fabricImage: FabricImage
 ): FabricJsMetadata {
   const metadataWithSrc = fabricImage.toObject();
+  console.log('TO OBJECT');
 
   // Get all the metadata for the fabricImage, EXCEPT for the src
   const { src, ...fabricJsMetadata } = metadataWithSrc;

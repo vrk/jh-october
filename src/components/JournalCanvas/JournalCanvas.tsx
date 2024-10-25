@@ -55,7 +55,7 @@ function JournalCanvas({
   useHotkeyZoom(fabricCanvas, documentRectangle);
   useHotkeyDeleteImage(fabricCanvas);
   useAutoSaveCanvas(fabricCanvas);
-  useSaveSpreadSnapshot(fabricCanvas, documentRectangle);
+  // useSaveSpreadSnapshot(fabricCanvas, documentRectangle);
   const drop = useReceiveDragDropFromToolbox(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas

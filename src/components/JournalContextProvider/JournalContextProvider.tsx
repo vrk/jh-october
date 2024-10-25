@@ -71,7 +71,6 @@ const JournalContextProvider = ({
     allSpreads.sort((a, b) => {
       return a.order - b.order;
     })
-    console.log(allSpreads)
 
     if (allSpreads.length === 0) {
       throw new Error("assertion error");
