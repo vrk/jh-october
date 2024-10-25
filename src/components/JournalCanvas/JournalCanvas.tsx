@@ -21,8 +21,9 @@ import {
 } from "../JournalContextProvider/JournalContextProvider";
 import useReceiveDragDropFromToolbox from "./hooks/use-receive-drag-drop-from-toolbox";
 import useAutoSaveCanvas from "./hooks/use-auto-save-canvas";
-import { augmentFabricImageWithSpreadItemMetadata, BACKGROUND_ID_KEY, BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
+import { augmentFabricImageWithSpreadItemMetadata, BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
 import useSaveSpreadSnapshot from "./hooks/use-save-spread-snapshot";
+import { JournalImage, SpreadItem } from "@/helpers/indexdb";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;
@@ -30,14 +31,16 @@ const DEFAULT_HEIGHT_IN_INCHES = 8.3;
 const DEFAULT_DOC_WIDTH = DEFAULT_WIDTH_IN_INCHES * DEFAULT_PPI;
 const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
-function JournalCanvas() {
+type Props = {
+  currentSpreadId: string;
+  loadedImages: Array<JournalImage>,
+  currentSpreadItems: Array<SpreadItem>
+}; 
+
+function JournalCanvas({
+  currentSpreadId, loadedImages, currentSpreadItems
+}: React.PropsWithoutRef<Props>) {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
-  const {
-    currentSpreadId,
-    journalLoadedStatus,
-    currentSpreadItems,
-    loadedImages,
-  } = React.useContext(JournalContext);
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
   const [cousinHtmlImage, setCousinHtmlImage] =
@@ -107,8 +110,7 @@ function JournalCanvas() {
   React.useEffect(() => {
     if (
       !fabricCanvas ||
-      !isCousinLoaded ||
-      journalLoadedStatus !== JournalLoadedStatus.Loaded
+      !isCousinLoaded
     ) {
       return;
     }
@@ -131,7 +133,7 @@ function JournalCanvas() {
         loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
       });
     }
-  }, [fabricCanvas, journalLoadedStatus, isCousinLoaded]);
+  }, [fabricCanvas, isCousinLoaded]);
 
   return (
     <div ref={drop as any}>

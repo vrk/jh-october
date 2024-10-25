@@ -5,14 +5,7 @@ import { JournalContext } from "@/components/JournalContextProvider/JournalConte
 import SpreadListItem from "../SpreadListItem";
 
 function SpreadsList() {
-  const {
-    journalId,
-    loadedImages,
-    setLoadedImages,
-    allSpreads,
-    currentSpreadId,
-    currentSpreadItems,
-  } = React.useContext(JournalContext);
+  const { allSpreads } = React.useContext(JournalContext);
   return (
     <div className={style.container}>
       {allSpreads.map((spread) => (
