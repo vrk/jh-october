@@ -46,6 +46,10 @@ export type Spread = {
   id: string;
   journalId: string;
   order: number;
+
+  previewThumbUrl?: string;
+  previewThumbHeight?: number;
+  previewThumbWidth?: number;
 };
 
 // TODO: lol make this better if at all feasible (might not be)
@@ -249,6 +253,28 @@ export async function createSpread(journalId: string): Promise<Spread> {
     const request = objectStore.add(spread);
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(spread);
+    };
+  });
+}
+
+export async function updateSpreadThumbnail(spread: Spread, thumbDataUrl: string, thumbWidth: number, thumbHeight: number): Promise<Spread> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
+    const objectStore = transaction.objectStore(SPREADS_STORE_NAME);
+
+    const newSpreadData: Spread = {
+      ...spread,
+      previewThumbUrl: thumbDataUrl,
+      previewThumbWidth: thumbWidth,
+      previewThumbHeight: thumbHeight
+    };
+    const request = objectStore.put(newSpreadData);
+    request.onerror = () => {
+      reject(`Could not update object with id: ${newSpreadData.id}`);
     };
     request.onsuccess = () => {
       resolve(spread);

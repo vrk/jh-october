@@ -7,11 +7,9 @@ import {
 } from "@/helpers/indexdb";
 import React from "react";
 import {
-  createImageResourceForJournal,
   getImagesForJournalWithUsageInformation,
   JournalImage,
 } from "@/helpers/indexdb";
-import { initialize } from "next/dist/server/lib/render-server";
 
 type JournalContextType = {
   journalId: string | null;
@@ -74,6 +72,7 @@ const JournalContextProvider = ({
     if (allSpreads.length === 0) {
       throw new Error("assertion error");
     }
+    setAllSpreads(allSpreads);
     const [firstSpread] = allSpreads;
     setCurrentSpreadId(firstSpread.id);
 

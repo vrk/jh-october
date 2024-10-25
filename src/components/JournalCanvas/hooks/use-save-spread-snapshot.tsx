@@ -2,13 +2,11 @@
 import React from "react";
 import { Canvas, FabricImage, ImageFormat, filters } from "fabric";
 import {
-  addFabricImageToCanvas,
-  getFabricImageWithoutSrc,
-} from "@/helpers/canvas-helpers";
-import {
   BACKGROUND_ID_VALUE,
   PROPERTIES_TO_INCLUDE_IN_CLONES,
 } from "@/helpers/editable-object";
+import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
+import { updateSpreadThumbnail } from "@/helpers/indexdb";
 
 const AUTO_SAVE_DELAY_MS = 500;
 
@@ -16,6 +14,8 @@ function useSaveSpreadSnapshot(
   fabricCanvas: Canvas | null,
   documentRectangle: FabricImage | undefined
 ) {
+  const { allSpreads, setAllSpreads, currentSpreadId } =
+    React.useContext(JournalContext);
   const [needsSaveTimeoutId, setNeedsSaveTimeoutId] =
     React.useState<NodeJS.Timeout | null>(null);
 
@@ -47,7 +47,7 @@ function useSaveSpreadSnapshot(
         }
         const fabricImage = object as FabricImage;
         const resizeFilter = new filters.Resize();
-        resizeFilter.resizeType = 'lanczos';
+        resizeFilter.resizeType = "lanczos";
         fabricImage.applyFilters([resizeFilter]);
       }
 
@@ -64,11 +64,23 @@ function useSaveSpreadSnapshot(
         multiplier: 0.2,
       };
       const dataUrl = clonedCanvas.toDataURL(options);
-
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = "my-pic.png";
-      link.click();
+      const [currentSpread] = allSpreads.filter(
+        (s) => s.id === currentSpreadId
+      );
+      if (!currentSpread) {
+        debugger;
+        throw new Error("assertion error");
+      }
+      await updateSpreadThumbnail(
+        currentSpread,
+        dataUrl,
+        clonedCanvas.width,
+        clonedCanvas.height
+      );
+      currentSpread.previewThumbUrl = dataUrl;
+      currentSpread.previewThumbWidth = clonedCanvas.width;
+      currentSpread.previewThumbHeight = clonedCanvas.height;
+      setAllSpreads([...allSpreads]);
     }, AUTO_SAVE_DELAY_MS);
     setNeedsSaveTimeoutId(newTimeoutId);
   };
@@ -84,7 +96,7 @@ function useSaveSpreadSnapshot(
     return () => {
       fabricCanvas.off(canvasEventHandlers);
     };
-  }, [fabricCanvas, documentRectangle]);
+  }, [fabricCanvas, documentRectangle, allSpreads, currentSpreadId]);
 }
 
 export default useSaveSpreadSnapshot;
