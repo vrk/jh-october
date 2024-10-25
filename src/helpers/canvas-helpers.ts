@@ -91,10 +91,9 @@ export function loadFabricImageInCanvas(
   canvas: Canvas,
   fabricImage: FabricImage
 ) {
-  console.log('scale', fabricImage.getScaledHeight());
   setEditableObjectProperties(fabricImage);
-  canvas.bringObjectToFront(fabricImage);
   canvas.add(fabricImage);
+  canvas.bringObjectToFront(fabricImage);
   canvas.requestRenderAll();
 }
 
@@ -105,7 +104,6 @@ export function getFabricImageWithoutSrc(
   const metadataWithSrc = fabricImage.toObject();
   // Get all the metadata for the fabricImage, EXCEPT for the src
   const { src, ...fabricJsMetadata } = metadataWithSrc;
-  console.log("METADATA", fabricJsMetadata);
   return fabricJsMetadata;
 }
 

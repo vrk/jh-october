@@ -64,7 +64,6 @@ function PhotoTrayThumbnail({
         tabIndex={tabIndex}
         onFocus={onFocus}
         onBlur={() => {
-          console.log("blur item");
           onBlur && onBlur();
         }}
       />

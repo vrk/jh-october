@@ -52,7 +52,6 @@ function JournalCanvas() {
   const [_, drop] = useDrop(() => ({
     accept: THUMBNAIL_DRAG_ACCEPT_TYPE,
     drop: async ( { id }: ThumbnailDragParameteters ) => {
-      console.log("dropped", id);
       if (!fabricCanvas || !documentRectangle || !journalId || !currentSpreadId) {
         return;
       }
@@ -65,7 +64,6 @@ function JournalCanvas() {
       const spreadItem = await createSpreadItem(currentSpreadId, image.id, fabricJsMetadata);
       augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
 
-      console.log('we are setting the current spread items now');
       setCurrentSpreadItems([
         ...currentSpreadItems,
         spreadItem
@@ -132,6 +130,7 @@ function JournalCanvas() {
       }
       const fabricObjectData = spreadItem.fabricjsMetadata; 
       fabricObjectData.src = image.dataUrl;
+      console.log('spread item load', spreadItem);
       // TODO: See if there's benefit of doing this all in a batch
       util.enlivenObjects([ fabricObjectData ]).then(([ object ]) => {
         const fabricImage = object as FabricImage;
@@ -139,7 +138,6 @@ function JournalCanvas() {
         loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
       });
     }
-
   }, [fabricCanvas, journalLoadedStatus, isCousinLoaded]);
 
   return (

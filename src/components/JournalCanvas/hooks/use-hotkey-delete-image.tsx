@@ -17,12 +17,14 @@ function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
       const removedSpreadItems: Array<string> = [];
       for (const object of activeObjects) {
         fabricCanvas.remove(object);
+        console.log('removing');
         if (object.spreadItemId) {
           removedSpreadItems.push(object.spreadItemId);
         }
       }
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
+        console.log('rerender');
       const newSpreadItems = currentSpreadItems.filter(current => {
         if (removedSpreadItems.includes(current.id)) {
           return false;
