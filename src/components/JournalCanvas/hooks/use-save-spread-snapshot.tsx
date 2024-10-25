@@ -85,6 +85,8 @@ function useSaveSpreadSnapshot(
     setNeedsSaveTimeoutId(newTimeoutId);
   };
   const canvasEventHandlers = {
+    "object:added": onCanvasObjectModified,
+    "object:removed": onCanvasObjectModified,
     "object:modified": onCanvasObjectModified,
   };
 
