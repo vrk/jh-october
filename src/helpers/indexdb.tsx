@@ -260,7 +260,12 @@ export async function createSpread(journalId: string): Promise<Spread> {
   });
 }
 
-export async function updateSpreadThumbnail(spread: Spread, thumbDataUrl: string, thumbWidth: number, thumbHeight: number): Promise<Spread> {
+export async function updateSpreadThumbnail(
+  spread: Spread,
+  thumbDataUrl: string,
+  thumbWidth: number,
+  thumbHeight: number
+): Promise<Spread> {
   return new Promise(async (resolve, reject) => {
     const db = await getDatabase();
     const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
@@ -270,7 +275,7 @@ export async function updateSpreadThumbnail(spread: Spread, thumbDataUrl: string
       ...spread,
       previewThumbUrl: thumbDataUrl,
       previewThumbWidth: thumbWidth,
-      previewThumbHeight: thumbHeight
+      previewThumbHeight: thumbHeight,
     };
     const request = objectStore.put(newSpreadData);
     request.onerror = () => {
@@ -298,7 +303,13 @@ export async function updateSpreadItem(
   imageId: string,
   fabricjsMetadata: FabricJsMetadata
 ): Promise<SpreadItem> {
-  return createSpreadItemInDatabase(id, spreadId, imageId, fabricjsMetadata, true);
+  return createSpreadItemInDatabase(
+    id,
+    spreadId,
+    imageId,
+    fabricjsMetadata,
+    true
+  );
 }
 
 async function createSpreadItemInDatabase(
@@ -474,6 +485,47 @@ export async function deleteImageResource(imageId: string) {
     const request = objectStore.delete(imageId);
     request.onerror = () => {
       reject(`Requested image ID could not be deleted: ${imageId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
+function deleteAllSpreadItemsForSpread(spreadId: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME, "readwrite");
+    const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+    const spreadItemWithSpreadIdIndex = spreadItemsStore.index(
+      SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME
+    );
+    const request = spreadItemWithSpreadIdIndex.openCursor(spreadId);
+    request.onerror = () => {
+      reject(`Requested spreadId is not found: ${spreadId}`);
+    };
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        cursor.delete();
+        cursor.continue();
+      } else {
+        resolve(true);
+      }
+    };
+  });
+}
+
+export async function deleteSpread(spreadId: string) {
+  return new Promise(async (resolve, reject) => {
+    await deleteAllSpreadItemsForSpread(spreadId);
+    
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
+    const spreadsStore = transaction.objectStore(SPREADS_STORE_NAME);
+    const request = spreadsStore.delete(spreadId);
+    request.onerror = () => {
+      reject(`Requested spread ID could not be deleted: ${spreadId}`);
     };
     request.onsuccess = () => {
       resolve(request.result);

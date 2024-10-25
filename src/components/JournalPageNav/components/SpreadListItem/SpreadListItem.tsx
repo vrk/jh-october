@@ -20,34 +20,9 @@ function SpreadListItem({
   onFocus,
   onBlur,
 }: React.PropsWithRef<Props>) {
-  const { setCurrentSpreadId } = React.useContext(JournalContext);
-  let inner = <></>;
-  const onSelectImage = () => {
-    setCurrentSpreadId(spread.id);
-  };
-  if (
-    spread.previewThumbHeight &&
-    spread.previewThumbUrl &&
-    spread.previewThumbWidth
-  ) {
-    inner = (
-      <Image
-        src={spread.previewThumbUrl}
-        height={spread.previewThumbHeight}
-        width={spread.previewThumbWidth}
-        style={{
-          maxHeight: "100%",
-          width: "auto",
-        }}
-        tabIndex={tabIndex}
-        onClick={onSelectImage}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        alt={`preview for page ${spread.order}`}
-      ></Image>
-    );
-  } else {
-    inner = (
+  const classNames = `${style.container} ${isSelected ? style.selected : ""}`;
+  return (
+    <div className={classNames}>
       <Image
         src={hobonichiCousinimage.src}
         height={hobonichiCousinimage.height}
@@ -57,15 +32,12 @@ function SpreadListItem({
           width: "auto",
         }}
         tabIndex={tabIndex}
-        onClick={onSelectImage}
         onFocus={onFocus}
         onBlur={onBlur}
         alt={`preview for page ${spread.order}`}
       ></Image>
-    );
-  }
-  const classNames = `${style.container} ${isSelected ? style.selected : ""}`;
-  return <div className={classNames}>{inner}</div>;
+    </div>
+  );
 }
 
 export default SpreadListItem;

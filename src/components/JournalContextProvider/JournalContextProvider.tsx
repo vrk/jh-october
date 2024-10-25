@@ -101,6 +101,7 @@ const JournalContextProvider = ({
   // A bit hacky
   // TODO: see if there's a more elegant way
   React.useEffect(() => {
+    console.log('UPDATTINGGGG LOADED IMAGES')
     const imageIdsCurrentlyUsedInSpread = currentSpreadItems.map(
       (item) => item.imageId
     );
