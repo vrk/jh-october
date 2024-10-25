@@ -1,15 +1,16 @@
-
 import {
-  Canvas,
   Control,
   controlsUtils,
   FabricImage,
   FabricObject,
+  TransformActionHandler,
 } from "fabric";
-import { addFabricImageToCanvas } from "@/helpers/canvas-helpers";
 import { SpreadItem } from "./indexdb";
 
-export function augmentFabricImageWithSpreadItemMetadata(image: FabricImage, spreadItem: SpreadItem) {
+export function augmentFabricImageWithSpreadItemMetadata(
+  image: FabricImage,
+  spreadItem: SpreadItem
+) {
   image.spreadItemId = spreadItem.id;
 }
 
@@ -23,73 +24,107 @@ export function setEditableObjectProperties(object: FabricObject) {
   object.controls.mt = new Control({
     x: 0,
     y: -0.5,
-    cursorStyle: 'pointer',
+    cursorStyle: "pointer",
     actionHandler: onCropFromTop,
-    actionName: 'cropping',
+    actionName: "cropping",
     render: renderHorizontalCropIcon,
   });
   object.controls.mr = new Control({
     x: 0.5,
     y: 0,
-    cursorStyle: 'pointer',
+    cursorStyle: "pointer",
     actionHandler: onCropFromRight,
-    actionName: 'cropping',
+    actionName: "cropping",
     render: renderVerticalCropIcon,
   });
   object.controls.ml = new Control({
     x: -0.5,
     y: 0,
     // offsetX: 100,
-    cursorStyle: 'pointer',
-    actionName: 'cropping',
+    cursorStyle: "pointer",
+    actionName: "cropping",
     render: renderVerticalCropIcon,
-    actionHandler: onCropFromLeft
+    actionHandler: onCropFromLeft,
   });
   object.controls.mb = new Control({
     x: 0,
     y: 0.5,
     // offsetX: 100,
-    cursorStyle: 'pointer',
-    actionName: 'cropping',
+    cursorStyle: "pointer",
+    actionName: "cropping",
     render: renderHorizontalCropIcon,
-    actionHandler: onCropFromBottom
+    actionHandler: onCropFromBottom,
   });
 }
 
-function renderHorizontalCropIcon(ctx, left, top, styleOverride, fabricObject) {
+function renderHorizontalCropIcon(
+  ctx: CanvasRenderingContext2D,
+  left: number,
+  top: number,
+  _: any,
+  fabricObject: FabricObject
+) {
   ctx.save();
   ctx.translate(left, top);
   // ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
   // ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
   const rectangleWidth = fabricObject.cornerSize * 2;
-  ctx.fillRect(-rectangleWidth / 2, -rectangleWidth / 4, rectangleWidth , rectangleWidth / 2)
+  ctx.fillRect(
+    -rectangleWidth / 2,
+    -rectangleWidth / 4,
+    rectangleWidth,
+    rectangleWidth / 2
+  );
   ctx.restore();
 }
 
-function renderVerticalCropIcon(ctx, left, top, styleOverride, fabricObject) {
+function renderVerticalCropIcon(
+  ctx: CanvasRenderingContext2D,
+  left: number,
+  top: number,
+  _: any,
+  fabricObject: FabricObject
+) {
   ctx.save();
   ctx.translate(left, top);
   // ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
   // ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
   const rectangleHeight = fabricObject.cornerSize * 2;
-  ctx.fillRect(-rectangleHeight / 4, -rectangleHeight / 2, rectangleHeight /2, rectangleHeight);
+  ctx.fillRect(
+    -rectangleHeight / 4,
+    -rectangleHeight / 2,
+    rectangleHeight / 2,
+    rectangleHeight
+  );
   ctx.restore();
 }
 
-function onCropFromRight(eventData, transform, x, y) {
-  const target = transform.target;
-  const localPoint = controlsUtils.getLocalPoint(transform, transform.originX, transform.originY, x, y);
+const onCropFromRight: TransformActionHandler = (
+  eventData,
+  transform,
+  x,
+  y
+) => {
+  const target = transform.target as FabricImage;
+  const localPoint = controlsUtils.getLocalPoint(
+    transform,
+    transform.originX,
+    transform.originY,
+    x,
+    y
+  );
   const newWidth = localPoint.x / target.scaleX;
-  const originalWidthWithCrop = target.getOriginalSize().width - (target.cropX || 0);
+  const originalWidthWithCrop =
+    target.getOriginalSize().width - (target.cropX || 0);
   if (newWidth > 0 && newWidth <= originalWidthWithCrop) {
-    target.set('width', newWidth);
+    target.set("width", newWidth);
     return true;
   }
   return false;
-}
+};
 
-function onCropFromLeft(eventData, transform, x, y) {
-  const target = transform.target;
+const onCropFromLeft: TransformActionHandler = (eventData, transform, x, y) => {
+  const target = transform.target as FabricImage;
   const originalWidthWithCrop = target.getOriginalSize().width;
 
   const delta = x - target.left;
@@ -97,20 +132,20 @@ function onCropFromLeft(eventData, transform, x, y) {
   const percentDecrease = delta / scaledWidth;
 
   const newWidth = target.width * (1 - percentDecrease);
-  const cropDelta = target.width * percentDecrease; 
+  const cropDelta = target.width * percentDecrease;
   const newCrop = target.cropX + cropDelta;
-  
+
   if (newWidth > 0 && newWidth <= originalWidthWithCrop) {
-    target.set('width', newWidth);
-    target.set('cropX', Math.max(newCrop, 0));
-    target.set('left', x);
+    target.set("width", newWidth);
+    target.set("cropX", Math.max(newCrop, 0));
+    target.set("left", x);
     return true;
   }
   return false;
-}
+};
 
-function onCropFromTop(eventData, transform, x, y) {
-  const target = transform.target;
+const onCropFromTop: TransformActionHandler = (eventData, transform, x, y) => {
+  const target = transform.target as FabricImage;
   const originalHeight = target.getOriginalSize().height;
 
   const delta = y - target.top;
@@ -118,19 +153,24 @@ function onCropFromTop(eventData, transform, x, y) {
   const percentDecrease = delta / scaledHeight;
 
   const newHeight = target.height * (1 - percentDecrease);
-  const cropDelta = target.height * percentDecrease; 
-  
+  const cropDelta = target.height * percentDecrease;
+
   if (newHeight > 0 && newHeight <= originalHeight) {
-    target.set('height', newHeight);
-    target.set('cropY', Math.max(target.cropY + cropDelta, 0));
-    target.set('top', y);
+    target.set("height", newHeight);
+    target.set("cropY", Math.max(target.cropY + cropDelta, 0));
+    target.set("top", y);
     return true;
   }
   return false;
-}
+};
 
-function onCropFromBottom(eventData, transform, x, y) {
-  const target = transform.target;
+const onCropFromBottom: TransformActionHandler = (
+  eventData,
+  transform,
+  x,
+  y
+) => {
+  const target = transform.target as FabricImage;
   const originalHeightWithCrop = target.getOriginalSize().height - target.cropY;
 
   const scaledHeight = target.getScaledHeight();
@@ -138,10 +178,10 @@ function onCropFromBottom(eventData, transform, x, y) {
   const percentOfFullHeight = newScaledHeight / scaledHeight;
 
   const newHeight = target.height * percentOfFullHeight;
-  
+
   if (newHeight > 0 && newHeight <= originalHeightWithCrop) {
-    target.set('height', newHeight);
+    target.set("height", newHeight);
     return true;
   }
   return false;
-}
+};

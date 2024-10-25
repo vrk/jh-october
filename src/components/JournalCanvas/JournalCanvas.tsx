@@ -62,6 +62,7 @@ function JournalCanvas() {
     });
 
     initCanvas(newlyMadeCanvas);
+    console.log("vrk creating canvas")
 
     setCanvasDimensionsToWindowSize(newlyMadeCanvas, overallContainer.current);
 
