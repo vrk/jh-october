@@ -1,7 +1,7 @@
 "use client";
 import { FabricImage, FabricObject, Canvas, util, filters } from "fabric";
 import { setEditableObjectProperties } from "./editable-object";
-import { FabricJsMetadata, JournalImage } from "./indexdb";
+import { FabricJsMetadata } from "./indexdb";
 
 export function setCanvasDimensionsToWindowSize(
   canvas: Canvas,

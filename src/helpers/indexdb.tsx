@@ -365,10 +365,8 @@ export async function createImageResourceForJournal(
     const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
     const id = shortIDGenerator.randomUUID();
 
-    const object: JournalImage = {
+    const object: DBJournalImage = {
       ...imageInfo,
-      isUsedBySpreadId: null,
-      isUsedBySpreadItemId: null,
       id,
     };
 
@@ -439,7 +437,7 @@ export async function getAllSpreadsForJournal(
   });
 }
 
-export async function getAllSpreadItemIdsForSpread(
+export async function getAllSpreadItemsForSpread(
   spreadId: string
 ): Promise<Array<SpreadItem>> {
   return new Promise(async (resolve, reject) => {

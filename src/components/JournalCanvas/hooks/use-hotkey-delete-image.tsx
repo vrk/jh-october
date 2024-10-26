@@ -2,14 +2,13 @@ import React from "react";
 import { Canvas } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
-import { deleteSpreadItem } from "@/helpers/indexdb";
 
 function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
-  const { currentSpreadItems, setCurrentSpreadItems } = React.useContext(JournalContext);
+  const { deleteSpreadItems } = React.useContext(JournalContext);
 
   useHotkeys(
     "Delete,Backspace",
-    () => {
+    async () => {
       if (!fabricCanvas) {
         return;
       }
@@ -23,22 +22,10 @@ function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
       }
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
-      const newSpreadItems = currentSpreadItems.filter(current => {
-        if (removedSpreadItems.includes(current.id)) {
-          return false;
-        }
-        return true;
-      });
-
-      setCurrentSpreadItems(
-        [...newSpreadItems]
-      );
-
-      removedSpreadItems.forEach(spreadItemId => deleteSpreadItem(spreadItemId));
-
+      await deleteSpreadItems(removedSpreadItems);
     },
     { preventDefault: true },
-    [fabricCanvas, currentSpreadItems, setCurrentSpreadItems]
+    [fabricCanvas]
   );
 }
 

@@ -1,18 +1,18 @@
 import * as React from "react";
 import style from "./PhotoTrayThumbnailList.module.css";
 import PhotoTrayThumbnail from "../PhotoTrayThumbnail/PhotoTrayThumbnail";
-import { deleteImageResource, JournalImage } from "@/helpers/indexdb";
+import { JournalImage } from "@/helpers/indexdb";
 import useHotkeyDelete from "../../../../hooks/use-hotkey-delete-photo-resource";
 import useHotkeyImageNav from "../../../../hooks/use-hotkey-photo-nav";
 
 type Props = {
   images: Array<JournalImage>;
-  setImages: (images: Array<JournalImage>) => void;
+  deleteImage: (id: string) => void;
 };
 
 function PhotoTrayThumbnailList({
   images,
-  setImages,
+  deleteImage,
 }: React.PropsWithoutRef<Props>) {
   const [selectedImageId, setSelectedImageId] = React.useState<string | null>(
     null
@@ -29,20 +29,11 @@ function PhotoTrayThumbnailList({
     if (!selectedImageId) {
       return;
     }
-    const selectedIndex = images.findIndex(
-      (image) => image.id === selectedImageId
-    );
-    await deleteImageResource(selectedImageId);
-    const newImages = images.filter((image) => image.id !== selectedImageId);
-    setImages(newImages);
-    if (selectedIndex >= 0) {
-      if (selectedIndex < newImages.length) {
-        setSelectedImageId(newImages[selectedIndex].id);
-      } else if (selectedIndex > 0) {
-        // Set to last element in the list
-        setSelectedImageId(newImages[selectedIndex - 1].id);
-      }
+    const imageToDelete = images.find(i => i.id === selectedImageId);
+    if (!imageToDelete) {
+      throw new Error('assertion error -- image to delete was not found')
     }
+    deleteImage(imageToDelete.id);
   };
   useHotkeyDelete(selectedImageId, () => deleteSelectedImage());
   useHotkeyImageNav(images, selectedImageId, setSelectedImageId);

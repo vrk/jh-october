@@ -5,10 +5,9 @@ import { JournalContext } from "@/components/JournalContextProvider/JournalConte
 import SpreadListItem from "../SpreadListItem";
 import useHotkeyImageNav from "@/hooks/use-hotkey-photo-nav";
 import useHotkeyDelete from "@/hooks/use-hotkey-delete-photo-resource";
-import { deleteSpread } from "@/helpers/indexdb";
 
 function SpreadsList() {
-  const { allSpreads, setCurrentSpreadId, setAllSpreads} = React.useContext(JournalContext);
+  const { allSpreads, setCurrentSpreadId, deleteSpread } = React.useContext(JournalContext);
 
   const [selectedThumbnailId, setSelectedThumbnailId] = React.useState<
     string | null
@@ -20,25 +19,12 @@ function SpreadsList() {
     }
   });
 
-  // TODO: This is very similar code to PhotoTrayThumbnailList - see if can consolidate
   const deleteSelectedSpread = async () => {
     if (!selectedThumbnailId) {
       return;
     }
-    const selectedIndex = allSpreads.findIndex(
-      (image) => image.id === selectedThumbnailId
-    );
     await deleteSpread(selectedThumbnailId);
-    const newSpreads = allSpreads.filter((spread) => spread.id !== selectedThumbnailId);
-    setAllSpreads(newSpreads);
-    if (selectedIndex >= 0) {
-      if (selectedIndex < newSpreads.length) {
-        setCurrentSpreadId(newSpreads[selectedIndex].id);
-      } else if (selectedIndex > 0) {
-        // Set to last element in the list
-        setCurrentSpreadId(newSpreads[selectedIndex - 1].id);
-      }
-    }
+    setSelectedThumbnailId(null);
   };
   useHotkeyDelete(selectedThumbnailId, () => deleteSelectedSpread());
   return (

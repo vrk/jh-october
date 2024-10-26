@@ -1,7 +1,6 @@
 import * as React from "react";
 import style from "./PhotoTray.module.css";
 import {
-  createImageResourceForJournal,
   JournalImage,
 } from "@/helpers/indexdb";
 import { FabricContext } from "../FabricContextProvider";
@@ -14,7 +13,7 @@ type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
-  const { journalId, loadedImages, setLoadedImages } = React.useContext(JournalContext);
+  const { journalId, loadedImages, addLoadedImages, deleteLoadedImage } = React.useContext(JournalContext);
 
   const [selectedSortBy, setSelectedSortBy] =
     React.useState<SortBy>("importTime");
@@ -28,7 +27,7 @@ function PhotoTray() {
         return;
       }
       const images = await importFiles(files, journalId);
-      setLoadedImages([...loadedImages, ...images]);
+      await addLoadedImages(images);
     };
     button = <button onClick={onImportPhotoButtonClick}>Import photos</button>;
   }
@@ -63,7 +62,7 @@ function PhotoTray() {
       <hr />
       <PhotoTrayThumbnailList
         images={unusedImages}
-        setImages={setLoadedImages}
+        deleteImage={deleteLoadedImage}
       ></PhotoTrayThumbnailList>
     </div>
   );
@@ -164,7 +163,7 @@ async function importImage(
       photoTakenTime = Date.parse(hackedDate);
     }
   }
-  const imageInfo = {
+  return {
     id: "", // HACK to make typescript compiler happy -_-
     lastModified: file.lastModified,
     photoTakenTime,
@@ -176,12 +175,9 @@ async function importImage(
     thumbDataUrl: thumbnail.data,
     thumbHeight: thumbnail.height,
     thumbWidth: thumbnail.width,
+    isUsedBySpreadId: null,
+    isUsedBySpreadItemId: null
   };
-  const image = await createImageResourceForJournal(imageInfo);
-  const augmented: JournalImage = image as any;
-  augmented.isUsedBySpreadId = null;
-  augmented.isUsedBySpreadItemId = null;
-  return augmented;
 }
 
 async function createImageElement(file: File): Promise<HTMLImageElement> {
