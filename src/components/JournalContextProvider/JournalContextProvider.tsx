@@ -81,10 +81,9 @@ const JournalContextProvider = ({
     JournalLoadedStatus.Uninitialized
   );
 
-  const setCurrentSpreadId = async (newSpreadId: string) => {
+  const setCurrentSpreadIdAndUpdateItems = async (newSpreadId: string) => {
     setCurrentSpreadIdState(newSpreadId);
     const spreadItems = await database.getAllSpreadItemsForSpread(newSpreadId);
-    console.log('SET CURRENT SPREAD ITEMS', spreadItems)
     setCurrentSpreadItemsState(spreadItems);
   };
 
@@ -100,7 +99,7 @@ const JournalContextProvider = ({
     }
     setAllSpreadsState(allSpreads);
     const [firstSpread] = allSpreads;
-    await setCurrentSpreadId(firstSpread.id);
+    await setCurrentSpreadIdAndUpdateItems(firstSpread.id);
 
     // Now load all the images
     const loadedImages = await database.getImagesForJournalWithUsageInformation(
@@ -134,12 +133,9 @@ const JournalContextProvider = ({
   };
 
   const deleteLoadedImage = async (idToDelete: string) => {
-    console.log('DELETE', idToDelete);
-    console.log('loaded before', loadedImages);
     await database.deleteImageResource(idToDelete);
 
     const allButImage = loadedImages.filter((i) => i.id !== idToDelete);
-    console.log('loaded after', allButImage);
     setLoadedImagesState([...allButImage]);
   };
 
@@ -147,21 +143,29 @@ const JournalContextProvider = ({
     const newSpread = await database.createSpread(journalId);
 
     setCurrentSpreadIdState(newSpread.id);
-    setCurrentSpreadItems([]);
+    setCurrentSpreadItemsState([]);
+    setAllSpreadsState([...allSpreads, newSpread]);
   };
 
   const deleteSpread = async (idToDelete: string) => {
-    await deleteSpread(idToDelete);
+    await database.deleteSpread(idToDelete);
 
     const allButSpread = allSpreads.filter((i) => i.id !== idToDelete);
     setAllSpreadsState([...allButSpread]);
+
+    if (idToDelete === currentSpreadId) {
+      const [firstSpread] = allButSpread;
+      if (!firstSpread) {
+        throw new Error('assertion error - deleted last spread')
+      }
+      setCurrentSpreadIdAndUpdateItems(firstSpread.id)
+    }
   };
 
-  const setCurrentSpreadItems = (items: Array<SpreadItem>) => {
+  const setCurrentSpreadItemsAndUpdateLoadedImages = (items: Array<SpreadItem>) => {
     if (!currentSpreadId) {
       throw new Error("assertion error");
     }
-    console.log('about to set spread items:', items)
     setCurrentSpreadItemsState([...items]);
     const newLoadedImages = getUpdatedLoadedImages(
       currentSpreadId,
@@ -182,16 +186,20 @@ const JournalContextProvider = ({
       fabricJsMetadata
     );
 
-    setCurrentSpreadItems([...currentSpreadItems, spreadItem]);
+    setCurrentSpreadItemsAndUpdateLoadedImages([...currentSpreadItems, spreadItem]);
     return spreadItem;
   };
+
+  const setCurrentSpreadId = async (spreadId: string) => {
+    return setCurrentSpreadIdAndUpdateItems(spreadId);
+  }
 
   const updateSpreadItem = async (updatedItem: SpreadItem) => {
     const otherSpreadItems = currentSpreadItems.filter(
       (i) => updatedItem.id !== i.id
     );
     const newSpreadItems = [...otherSpreadItems, updatedItem];
-    setCurrentSpreadItems(newSpreadItems);
+    setCurrentSpreadItemsAndUpdateLoadedImages(newSpreadItems);
     await database.updateSpreadItem(
       updatedItem.id,
       updatedItem.spreadId,
@@ -208,7 +216,7 @@ const JournalContextProvider = ({
       return true;
     });
 
-    setCurrentSpreadItems([...newSpreadItems]);
+    setCurrentSpreadItemsAndUpdateLoadedImages([...newSpreadItems]);
 
     const deletionPromises = deletedSpreadIds.map((spreadItemId) =>
       database.deleteSpreadItem(spreadItemId)
@@ -262,13 +270,11 @@ const getUpdatedLoadedImages = (
     if (spreadItem) {
       image.isUsedBySpreadId = currentSpreadId;
       image.isUsedBySpreadItemId = spreadItem.id;
-    } else {
+    } else if (image.isUsedBySpreadId === currentSpreadId) {
       image.isUsedBySpreadId = null;
       image.isUsedBySpreadItemId = null;
     }
   }
-  console.log('NEW SPREAD ITEMS', newSpreadItems);
-  console.log('NEW LOADED IMAGES', oldLoadedImages);
   return oldLoadedImagesCopy;
 };
 
