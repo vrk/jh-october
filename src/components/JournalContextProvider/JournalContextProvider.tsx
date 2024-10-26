@@ -1,20 +1,7 @@
 "use client";
-import {
-  createImageResourceForJournal,
-  createSpread,
-  createSpreadItem,
-  deleteImageResource,
-  getAllSpreadItemsForSpread,
-  getAllSpreadsForJournal,
-  Spread,
-  SpreadItem,
-} from "@/helpers/indexdb";
 import React from "react";
-import {
-  deleteSpreadItem,
-  getImagesForJournalWithUsageInformation,
-  JournalImage,
-} from "@/helpers/indexdb";
+import * as database from "@/helpers/indexdb";
+import { JournalImage, Spread, SpreadItem } from "@/helpers/data-types";
 
 type JournalContextType = {
   journalId: string | null;
@@ -96,13 +83,13 @@ const JournalContextProvider = ({
 
   const setCurrentSpreadId = async (newSpreadId: string) => {
     setCurrentSpreadIdState(newSpreadId);
-    const spreadItems = await getAllSpreadItemsForSpread(newSpreadId);
+    const spreadItems = await database.getAllSpreadItemsForSpread(newSpreadId);
     setCurrentSpreadItemsState(spreadItems);
   };
 
   const initalizeContext = async () => {
     // Get all the spreads
-    const allSpreads = await getAllSpreadsForJournal(journalId);
+    const allSpreads = await database.getAllSpreadsForJournal(journalId);
     allSpreads.sort((a, b) => {
       return a.order - b.order;
     });
@@ -115,7 +102,7 @@ const JournalContextProvider = ({
     await setCurrentSpreadId(firstSpread.id);
 
     // Now load all the images
-    const loadedImages = await getImagesForJournalWithUsageInformation(
+    const loadedImages = await database.getImagesForJournalWithUsageInformation(
       journalId
     );
     setLoadedImagesState(loadedImages);
@@ -131,7 +118,7 @@ const JournalContextProvider = ({
   const addLoadedImages = async (newImages: Array<JournalImage>) => {
     const dbPromises = [];
     for (const imageInfo of newImages) {
-      const promise = createImageResourceForJournal(imageInfo);
+      const promise = database.createImageResourceForJournal(imageInfo);
       dbPromises.push(promise);
     }
     const newlyAddedImages = await Promise.all(dbPromises);
@@ -146,14 +133,14 @@ const JournalContextProvider = ({
   };
 
   const deleteLoadedImage = async (idToDelete: string) => {
-    await deleteImageResource(idToDelete);
+    await database.deleteImageResource(idToDelete);
 
     const allButImage = loadedImages.filter((i) => i.id !== idToDelete);
     setLoadedImagesState([...allButImage]);
   };
 
   const addSpread = async () => {
-    const newSpread = await createSpread(journalId);
+    const newSpread = await database.createSpread(journalId);
 
     setCurrentSpreadIdState(newSpread.id);
     setCurrentSpreadItems([]);
@@ -170,7 +157,7 @@ const JournalContextProvider = ({
     if (!currentSpreadId) {
       throw new Error("assertion error");
     }
-    setCurrentSpreadItemsState(items);
+    setCurrentSpreadItemsState([...items]);
     const newLoadedImages = getUpdatedLoadedImages(
       currentSpreadId,
       items,
@@ -184,7 +171,7 @@ const JournalContextProvider = ({
       throw new Error("assertion error: current spread id is null");
     }
 
-    const spreadItem = await createSpreadItem(
+    const spreadItem = await database.createSpreadItem(
       currentSpreadId,
       imageId,
       fabricJsMetadata
@@ -200,7 +187,12 @@ const JournalContextProvider = ({
     );
     const newSpreadItems = [...otherSpreadItems, updatedItem];
     setCurrentSpreadItems(newSpreadItems);
-    await updateSpreadItem(updatedItem);
+    await database.updateSpreadItem(
+      updatedItem.id,
+      updatedItem.spreadId,
+      updatedItem.imageId,
+      updatedItem.fabricjsMetadata
+    );
   };
 
   const deleteSpreadItems = async (deletedSpreadIds: Array<string>) => {
@@ -213,9 +205,10 @@ const JournalContextProvider = ({
 
     setCurrentSpreadItems([...newSpreadItems]);
 
-    const deletionPromises = deletedSpreadIds.map((spreadItemId) => deleteSpreadItem(spreadItemId));
+    const deletionPromises = deletedSpreadIds.map((spreadItemId) =>
+      database.deleteSpreadItem(spreadItemId)
+    );
     await Promise.all(deletionPromises);
-
   };
 
   return (

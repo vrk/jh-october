@@ -1,39 +1,31 @@
 "use client";
 import React from "react";
-import { Canvas, FabricImage } from "fabric";
+import { ActiveSelection, Canvas, FabricImage } from "fabric";
 import { getFabricImageWithoutSrc } from "@/helpers/canvas-helpers";
-import { SpreadItem, updateSpreadItem } from "@/helpers/indexdb";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
-const AUTO_SAVE_DELAY_MS = 500;
-
 function useAutoSaveCanvas(fabricCanvas: Canvas | null) {
-  const { updateSpreadItem } =
-    React.useContext(JournalContext);
+  const { updateSpreadItem } = React.useContext(JournalContext);
   const onCanvasObjectModified = async (objectEvent: any) => {
     if (!fabricCanvas) {
       return;
     }
-    const fabricImage = objectEvent.target as FabricImage;
-    console.log("object is modified");
-    const fabricJsMetadata = getFabricImageWithoutSrc(
-      fabricCanvas,
-      fabricImage
-    );
-    if (
-      !fabricImage.spreadItemId ||
-      !fabricImage.spreadId ||
-      !fabricImage.imageId
-    ) {
-      throw new Error("assertion error");
+    if (objectEvent.target.type.toLowerCase() === "activeselection") {
+      const activeSelection = objectEvent.target as ActiveSelection;
+      const updatePromises = [];
+      for (const object of activeSelection.getObjects()) {
+        const fabricImage = object as FabricImage;
+        const updatedSpreadItem = getUpdatedImage(fabricCanvas, fabricImage);
+        updatePromises.push(updateSpreadItem(updatedSpreadItem));
+      }
+      await Promise.all(updatePromises);
+    } else if (objectEvent.target.type.toLowerCase() === "image") {
+      const fabricImage = objectEvent.target as FabricImage;
+      const updatedSpreadItem = getUpdatedImage(fabricCanvas, fabricImage);
+      await updateSpreadItem(updatedSpreadItem);
+    } else {
+      throw new Error("assertion error -- unknown object type modified");
     }
-    const updatedSpreadItem = {
-      id: fabricImage.spreadItemId,
-      spreadId: fabricImage.spreadId,
-      imageId: fabricImage.imageId,
-      fabricjsMetadata: fabricJsMetadata,
-    };
-    await updateSpreadItem(updatedSpreadItem);
   };
   const canvasEventHandlers = {
     "object:modified": onCanvasObjectModified,
@@ -47,6 +39,23 @@ function useAutoSaveCanvas(fabricCanvas: Canvas | null) {
       fabricCanvas.off(canvasEventHandlers);
     };
   }, [fabricCanvas]);
+}
+
+function getUpdatedImage(fabricCanvas: Canvas, fabricImage: FabricImage) {
+  const fabricJsMetadata = getFabricImageWithoutSrc(fabricCanvas, fabricImage);
+  if (
+    !fabricImage.spreadItemId ||
+    !fabricImage.spreadId ||
+    !fabricImage.imageId
+  ) {
+    throw new Error("assertion error");
+  }
+  return {
+    id: fabricImage.spreadItemId,
+    spreadId: fabricImage.spreadId,
+    imageId: fabricImage.imageId,
+    fabricjsMetadata: fabricJsMetadata,
+  };
 }
 
 export default useAutoSaveCanvas;

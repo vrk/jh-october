@@ -1,5 +1,13 @@
 "use client";
 import ShortUniqueId from "short-unique-id";
+import {
+  Journal,
+  JournalImage,
+  DBJournalImage,
+  Spread,
+  SpreadItem,
+  FabricJsMetadata,
+} from "./data-types";
 
 const DATABASE_NAME = "OctoberJournalHelperDb";
 
@@ -17,50 +25,6 @@ const SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME = "spread_item_image_id";
 
 // TODO: make this less fragile
 const JOURNAL_ID_KEY_NAME = "journalId"; // CAREFUL!! MUST MATCH JOURNALIMAGE TYPE FIELD
-export type DBJournalImage = {
-  id: string;
-  journalId: string;
-  dataUrl: string;
-  height: number;
-  width: number;
-  thumbDataUrl: string;
-  thumbWidth: number;
-  thumbHeight: number;
-  lastModified: number;
-  photoTakenTime?: number;
-  importTime: number;
-};
-
-export type JournalImageUsageInfo = {
-  isUsedBySpreadId: string | null;
-  isUsedBySpreadItemId: string | null;
-};
-
-export type JournalImage = DBJournalImage & JournalImageUsageInfo;
-
-export type Journal = {
-  id: string;
-};
-
-export type Spread = {
-  id: string;
-  journalId: string;
-  order: number;
-
-  previewThumbUrl?: string;
-  previewThumbHeight?: number;
-  previewThumbWidth?: number;
-};
-
-// TODO: lol make this better if at all feasible (might not be)
-export type FabricJsMetadata = any;
-
-export type SpreadItem = {
-  id: string;
-  spreadId: string;
-  imageId: string;
-  fabricjsMetadata: FabricJsMetadata;
-};
 
 const SPREAD_ID_KEY_NAME = "spreadId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
 const IMAGES_ID_KEY_NAME = "imageId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
@@ -517,7 +481,7 @@ function deleteAllSpreadItemsForSpread(spreadId: string) {
 export async function deleteSpread(spreadId: string) {
   return new Promise(async (resolve, reject) => {
     await deleteAllSpreadItemsForSpread(spreadId);
-    
+
     const db = await getDatabase();
     const transaction = db.transaction(SPREADS_STORE_NAME, "readwrite");
     const spreadsStore = transaction.objectStore(SPREADS_STORE_NAME);
