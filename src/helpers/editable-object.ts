@@ -5,7 +5,7 @@ import {
   FabricObject,
   TransformActionHandler,
 } from "fabric";
-import { SpreadItem } from "./indexdb";
+import { SpreadItem } from "./data-types";
 
 export const BACKGROUND_ID_VALUE = '__background__';
 export const PROPERTIES_TO_INCLUDE_IN_CLONES = ['backgroundId', 'spreadItemId', 'imageId', 'spreadId'];

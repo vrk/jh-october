@@ -2,7 +2,6 @@
 import React from "react";
 import * as database from "@/helpers/indexdb";
 import { JournalImage, Spread, SpreadItem } from "@/helpers/data-types";
-import { isDataView } from "util/types";
 
 type JournalContextType = {
   journalId: string | null;

@@ -2,12 +2,12 @@ import * as React from "react";
 import style from "./PhotoTrayThumbnail.module.css";
 import Image from "next/image";
 import useIsVisible from "@/hooks/use-is-visible";
-import { JournalImage } from "@/helpers/indexdb";
 import { useDrag } from "react-dnd";
 import {
   THUMBNAIL_DRAG_ACCEPT_TYPE,
   ThumbnailDragParameteters,
 } from "@/helpers/drag-and-drop-helpers";
+import { JournalImage } from "@/helpers/data-types";
 
 type PhotoTrayThumbnailProps = {
   image: JournalImage;

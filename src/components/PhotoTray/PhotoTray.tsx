@@ -1,13 +1,11 @@
 import * as React from "react";
 import style from "./PhotoTray.module.css";
-import {
-  JournalImage,
-} from "@/helpers/indexdb";
 import { FabricContext } from "../FabricContextProvider";
 import { JournalContext } from "../JournalContextProvider/JournalContextProvider";
 import PhotoTrayThumbnailList from "./components/PhotoTrayThumbnailList";
 import DropdownSelect from "../DropdownSelect";
 import * as ExifReader from 'exifreader';
+import { JournalImage } from "@/helpers/data-types";
 
 type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 

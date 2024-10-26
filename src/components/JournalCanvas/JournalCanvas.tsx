@@ -21,7 +21,7 @@ import {
   augmentFabricImageWithSpreadItemMetadata,
   BACKGROUND_ID_VALUE,
 } from "@/helpers/editable-object";
-import { JournalImage, SpreadItem } from "@/helpers/indexdb";
+import { JournalImage, SpreadItem } from "@/helpers/data-types";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 5.8 * 2;

@@ -10,7 +10,6 @@ import {
   THUMBNAIL_DRAG_ACCEPT_TYPE,
   ThumbnailDragParameteters,
 } from "@/helpers/drag-and-drop-helpers";
-import { getPhotoById } from "@/helpers/indexdb";
 import { augmentFabricImageWithSpreadItemMetadata } from "@/helpers/editable-object";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
@@ -32,7 +31,10 @@ function useReceiveDragDropFromToolbox(
         ) {
           return;
         }
-        const image = await getPhotoById(id);
+        const image = journalContext.loadedImages.find((i) => i.id === id);
+        if (!image) {
+          throw new Error('assertion error = image is not defined')
+        }
         const fabricImage = await FabricImage.fromURL(image.dataUrl);
         fitFabricImageToRectangle(documentRectangle, fabricImage);
         addFabricImageToCanvas(fabricCanvas, fabricImage);

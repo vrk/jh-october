@@ -72,7 +72,9 @@ export function fitFabricImageToRectangle(
   fabricImage: FabricImage
 ) {
   const scale = util.findScaleToFit(fabricImage, documentRectangle) * 0.9;
-  fabricImage.scale(scale);
+  if (scale < 1) {
+    fabricImage.scale(scale);
+  }
 }
 
 export function addFabricImageToCanvas(

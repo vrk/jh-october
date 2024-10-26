@@ -1,8 +1,8 @@
 import * as React from "react";
 import style from "./SpreadListItem.module.css";
-import { Spread } from "@/helpers/indexdb";
 import Image from "next/image";
 import hobonichiCousinimage from "@/components/JournalCanvas/images/hobonichi-cousin-spread.png";
+import { Spread } from "@/helpers/data-types";
 
 type Props = {
   spread: Spread;
