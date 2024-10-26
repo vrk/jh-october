@@ -17,7 +17,10 @@ import useHotkeyZoom from "./hooks/use-hotkey-zoom";
 import useHotkeyDeleteImage from "./hooks/use-hotkey-delete-image";
 import useReceiveDragDropFromToolbox from "./hooks/use-receive-drag-drop-from-toolbox";
 import useAutoSaveCanvas from "./hooks/use-auto-save-canvas";
-import { augmentFabricImageWithSpreadItemMetadata, BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
+import {
+  augmentFabricImageWithSpreadItemMetadata,
+  BACKGROUND_ID_VALUE,
+} from "@/helpers/editable-object";
 import { JournalImage, SpreadItem } from "@/helpers/indexdb";
 
 const DEFAULT_PPI = 300;
@@ -28,12 +31,14 @@ const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
 type Props = {
   currentSpreadId: string;
-  loadedImages: Array<JournalImage>,
-  currentSpreadItems: Array<SpreadItem>
-}; 
+  loadedImages: Array<JournalImage>;
+  currentSpreadItems: Array<SpreadItem>;
+};
 
 function JournalCanvas({
-  currentSpreadId, loadedImages, currentSpreadItems
+  currentSpreadId,
+  loadedImages,
+  currentSpreadItems,
 }: React.PropsWithoutRef<Props>) {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
   const overallContainer = React.useRef<HTMLDivElement>(null);
@@ -66,7 +71,7 @@ function JournalCanvas({
     });
 
     initCanvas(newlyMadeCanvas);
-    console.log("vrk creating canvas")
+    console.log("vrk creating canvas");
 
     setCanvasDimensionsToWindowSize(newlyMadeCanvas, overallContainer.current);
 
@@ -104,10 +109,7 @@ function JournalCanvas({
 
   // Load Spread Items
   React.useEffect(() => {
-    if (
-      !fabricCanvas ||
-      !isCousinLoaded
-    ) {
+    if (!fabricCanvas || !isCousinLoaded) {
       return;
     }
     const imagesCurrentlyUsedInSpread = loadedImages.filter(
@@ -131,8 +133,16 @@ function JournalCanvas({
     }
   }, [fabricCanvas, isCousinLoaded]);
 
+  const onCanvasBlur = () => {
+    if (!fabricCanvas) {
+      return;
+    }
+    fabricCanvas.discardActiveObject();
+    fabricCanvas.requestRenderAll();
+  };
+
   return (
-    <div ref={drop as any}>
+    <div ref={drop as any} tabIndex={0} onBlur={onCanvasBlur}>
       <div ref={overallContainer} className={style.container}>
         <canvas ref={htmlCanvas}></canvas>
       </div>

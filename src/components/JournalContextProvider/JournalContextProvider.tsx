@@ -134,9 +134,12 @@ const JournalContextProvider = ({
   };
 
   const deleteLoadedImage = async (idToDelete: string) => {
+    console.log('DELETE', idToDelete);
+    console.log('loaded before', loadedImages);
     await database.deleteImageResource(idToDelete);
 
     const allButImage = loadedImages.filter((i) => i.id !== idToDelete);
+    console.log('loaded after', allButImage);
     setLoadedImagesState([...allButImage]);
   };
 

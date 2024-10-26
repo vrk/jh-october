@@ -29,11 +29,7 @@ function PhotoTrayThumbnailList({
     if (!selectedImageId) {
       return;
     }
-    const imageToDelete = images.find(i => i.id === selectedImageId);
-    if (!imageToDelete) {
-      throw new Error('assertion error -- image to delete was not found')
-    }
-    journalContext.deleteLoadedImage(imageToDelete.id);
+    journalContext.deleteLoadedImage(selectedImageId);
   };
   useHotkeyDelete(selectedImageId, () => deleteSelectedImage(), [journalContext]);
   useHotkeyImageNav(images, selectedImageId, setSelectedImageId, [journalContext]);
@@ -52,7 +48,7 @@ function PhotoTrayThumbnailList({
           tabIndex={index}
           selected={selectedImageId === image.id}
           onBlur={() => setSelectedImageId(null)}
-          onFocus={() => setSelectedImageId(image.id)}
+          onFocus={() => { console.log('selected', image.id); setSelectedImageId(image.id) }}
         />
       ))}
     </div>
