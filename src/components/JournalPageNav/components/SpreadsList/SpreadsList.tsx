@@ -23,6 +23,11 @@ function SpreadsList() {
     if (!selectedThumbnailId) {
       return;
     }
+
+    // don't delete the last spread
+    if (journalContext.allSpreads.length === 1){
+      return;
+    }
     await journalContext.deleteSpread(selectedThumbnailId);
     setSelectedThumbnailId(null);
   };

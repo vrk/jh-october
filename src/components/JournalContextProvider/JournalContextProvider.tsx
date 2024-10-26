@@ -2,6 +2,7 @@
 import React from "react";
 import * as database from "@/helpers/indexdb";
 import { JournalImage, Spread, SpreadItem } from "@/helpers/data-types";
+import { isDataView } from "util/types";
 
 type JournalContextType = {
   journalId: string | null;
@@ -150,8 +151,13 @@ const JournalContextProvider = ({
   const deleteSpread = async (idToDelete: string) => {
     await database.deleteSpread(idToDelete);
 
+    // Delete spread from React state
     const allButSpread = allSpreads.filter((i) => i.id !== idToDelete);
     setAllSpreadsState([...allButSpread]);
+
+    // Update loaded images 
+    const newLoadedImages = getLoadedImagesWithoutSpread(idToDelete, loadedImages);
+    setLoadedImagesState(newLoadedImages);
 
     if (idToDelete === currentSpreadId) {
       const [firstSpread] = allButSpread;
@@ -246,6 +252,20 @@ const JournalContextProvider = ({
       {children}
     </JournalContext.Provider>
   );
+};
+
+const getLoadedImagesWithoutSpread = (
+  deletedSpreadId: string,
+  oldLoadedImages: Array<JournalImage>
+) => {
+  const oldLoadedImagesCopy = [...oldLoadedImages];
+  for (const image of oldLoadedImages) {
+    if (image.isUsedBySpreadId === deletedSpreadId) {
+      image.isUsedBySpreadId = null;
+      image.isUsedBySpreadItemId = null;
+    }
+  }
+  return oldLoadedImagesCopy;
 };
 
 const getUpdatedLoadedImages = (
