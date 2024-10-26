@@ -5,7 +5,7 @@ import { getFabricImageWithoutSrc } from "@/helpers/canvas-helpers";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
 function useAutoSaveCanvas(fabricCanvas: Canvas | null) {
-  const { updateSpreadItem } = React.useContext(JournalContext);
+  const journalContext = React.useContext(JournalContext);
   const onCanvasObjectModified = async (objectEvent: any) => {
     if (!fabricCanvas) {
       return;
@@ -16,13 +16,13 @@ function useAutoSaveCanvas(fabricCanvas: Canvas | null) {
       for (const object of activeSelection.getObjects()) {
         const fabricImage = object as FabricImage;
         const updatedSpreadItem = getUpdatedImage(fabricCanvas, fabricImage);
-        updatePromises.push(updateSpreadItem(updatedSpreadItem));
+        updatePromises.push(journalContext.updateSpreadItem(updatedSpreadItem));
       }
       await Promise.all(updatePromises);
     } else if (objectEvent.target.type.toLowerCase() === "image") {
       const fabricImage = objectEvent.target as FabricImage;
       const updatedSpreadItem = getUpdatedImage(fabricCanvas, fabricImage);
-      await updateSpreadItem(updatedSpreadItem);
+      await journalContext.updateSpreadItem(updatedSpreadItem);
     } else {
       throw new Error("assertion error -- unknown object type modified");
     }
@@ -38,7 +38,7 @@ function useAutoSaveCanvas(fabricCanvas: Canvas | null) {
     return () => {
       fabricCanvas.off(canvasEventHandlers);
     };
-  }, [fabricCanvas]);
+  }, [fabricCanvas, journalContext]);
 }
 
 function getUpdatedImage(fabricCanvas: Canvas, fabricImage: FabricImage) {

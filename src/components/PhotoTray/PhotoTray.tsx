@@ -13,7 +13,7 @@ type SortBy = "imageDate" | "importTime" | "imageDateReversed";
 
 function PhotoTray() {
   const [fabricCanvas] = React.useContext(FabricContext);
-  const { journalId, loadedImages, addLoadedImages, deleteLoadedImage } = React.useContext(JournalContext);
+  const { journalId, loadedImages, addLoadedImages } = React.useContext(JournalContext);
 
   const [selectedSortBy, setSelectedSortBy] =
     React.useState<SortBy>("importTime");
@@ -62,7 +62,6 @@ function PhotoTray() {
       <hr />
       <PhotoTrayThumbnailList
         images={unusedImages}
-        deleteImage={deleteLoadedImage}
       ></PhotoTrayThumbnailList>
     </div>
   );

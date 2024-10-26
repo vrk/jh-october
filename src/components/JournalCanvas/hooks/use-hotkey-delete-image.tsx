@@ -4,7 +4,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
 function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
-  const { deleteSpreadItems } = React.useContext(JournalContext);
+  const journalContext = React.useContext(JournalContext);
 
   useHotkeys(
     "Delete,Backspace",
@@ -22,10 +22,10 @@ function useHotkeyDeleteImage(fabricCanvas: Canvas | null) {
       }
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
-      await deleteSpreadItems(removedSpreadItems);
+      await journalContext.deleteSpreadItems(removedSpreadItems);
     },
     { preventDefault: true },
-    [fabricCanvas]
+    [fabricCanvas, journalContext]
   );
 }
 

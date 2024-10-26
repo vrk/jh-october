@@ -84,6 +84,7 @@ const JournalContextProvider = ({
   const setCurrentSpreadId = async (newSpreadId: string) => {
     setCurrentSpreadIdState(newSpreadId);
     const spreadItems = await database.getAllSpreadItemsForSpread(newSpreadId);
+    console.log('SET CURRENT SPREAD ITEMS', spreadItems)
     setCurrentSpreadItemsState(spreadItems);
   };
 
@@ -157,6 +158,7 @@ const JournalContextProvider = ({
     if (!currentSpreadId) {
       throw new Error("assertion error");
     }
+    console.log('about to set spread items:', items)
     setCurrentSpreadItemsState([...items]);
     const newLoadedImages = getUpdatedLoadedImages(
       currentSpreadId,
@@ -238,42 +240,33 @@ const JournalContextProvider = ({
 const getUpdatedLoadedImages = (
   currentSpreadId: string,
   newSpreadItems: Array<SpreadItem>,
+
   oldLoadedImages: Array<JournalImage>
 ) => {
-  const imageIdsCurrentlyUsedInSpread = newSpreadItems.map(
-    (item) => item.imageId
-  );
+  const oldLoadedImagesCopy = [...oldLoadedImages];
 
-  const yepItsABigCopyOhWell = [...oldLoadedImages];
+  function getSpreadItem(image: JournalImage) {
+    for (const item of newSpreadItems) {
+      if (image.id === item.imageId) {
+        return item;
+      }
+    }
+    return null;
+  }
 
-  // Get the images that had been being used in this spread.
-  const imagesPreviouslyUsedInThisSpread = yepItsABigCopyOhWell.filter(
-    (image) => image.isUsedBySpreadId === currentSpreadId
-  );
-
-  // Check whether or not it's still being used.
-  for (const loadedImage of imagesPreviouslyUsedInThisSpread) {
-    // If not, update state accordingly.
-    if (!imageIdsCurrentlyUsedInSpread.includes(loadedImage.id)) {
-      loadedImage.isUsedBySpreadId = null;
-      loadedImage.isUsedBySpreadItemId = null;
+  for (const image of oldLoadedImages) {
+    const spreadItem = getSpreadItem(image);
+    if (spreadItem) {
+      image.isUsedBySpreadId = currentSpreadId;
+      image.isUsedBySpreadItemId = spreadItem.id;
+    } else {
+      image.isUsedBySpreadId = null;
+      image.isUsedBySpreadItemId = null;
     }
   }
-  // Now get all the images used in the spread
-  const imagesCurrentlyUsedInSpread = yepItsABigCopyOhWell.filter((image) =>
-    imageIdsCurrentlyUsedInSpread.includes(image.id)
-  );
-  for (const loadedImage of imagesCurrentlyUsedInSpread) {
-    loadedImage.isUsedBySpreadId = currentSpreadId;
-    const spreadItem = newSpreadItems.find(
-      (el) => el.imageId === loadedImage.id
-    );
-    if (!spreadItem) {
-      throw new Error("coding error");
-    }
-    loadedImage.isUsedBySpreadItemId = spreadItem.id;
-  }
-  return yepItsABigCopyOhWell;
+  console.log('NEW SPREAD ITEMS', newSpreadItems);
+  console.log('NEW LOADED IMAGES', oldLoadedImages);
+  return oldLoadedImagesCopy;
 };
 
 export default JournalContextProvider;

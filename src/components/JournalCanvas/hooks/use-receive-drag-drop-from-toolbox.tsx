@@ -18,8 +18,7 @@ function useReceiveDragDropFromToolbox(
   fabricCanvas: Canvas | null,
   documentRectangle: FabricImage | undefined
 ) {
-  const { journalId, currentSpreadId, currentSpreadItems, addSpreadItem } =
-    React.useContext(JournalContext);
+  const journalContext = React.useContext(JournalContext);
   // Handle drag & drop from the photo toolbar
   const [_, drop] = useDrop(
     () => ({
@@ -28,8 +27,8 @@ function useReceiveDragDropFromToolbox(
         if (
           !fabricCanvas ||
           !documentRectangle ||
-          !journalId ||
-          !currentSpreadId
+          !journalContext.journalId ||
+          !journalContext.currentSpreadId
         ) {
           return;
         }
@@ -42,16 +41,14 @@ function useReceiveDragDropFromToolbox(
           fabricCanvas,
           fabricImage
         );
-        const spreadItem = await addSpreadItem(image.id, fabricJsMetadata);
+        const spreadItem = await journalContext.addSpreadItem(image.id, fabricJsMetadata);
         augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
       },
     }),
     [
       documentRectangle,
       fabricCanvas,
-      currentSpreadItems,
-      journalId,
-      currentSpreadId,
+      journalContext
     ]
   );
   return drop;

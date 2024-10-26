@@ -1,6 +1,7 @@
+import { DependencyList } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
-function useHotkeyDelete(selectdId: string|null, onItemDeleted: () => void) {
+function useHotkeyDelete(selectdId: string|null, onItemDeleted: () => void, deps: DependencyList) {
   useHotkeys(
     "Delete,Backspace",
     () => {
@@ -10,7 +11,7 @@ function useHotkeyDelete(selectdId: string|null, onItemDeleted: () => void) {
       onItemDeleted();
     },
     { preventDefault: true },
-    [selectdId]
+    [selectdId, ...deps]
   );
 }
 

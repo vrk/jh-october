@@ -4,12 +4,12 @@ import style from './NewSpreadButton.module.css';
 import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
 function NewSpreadButton() {
-  const { journalId, addSpread } = React.useContext(JournalContext);
+  const journalContext = React.useContext(JournalContext);
   const onClicked = async () => {
-    if (!journalId) {
+    if (!journalContext.journalId) {
       return;
     }
-    await addSpread();
+    await journalContext.addSpread();
   }
   return <button className={style.container} onClick={onClicked}>New Spread</button>;
 }

@@ -1,22 +1,22 @@
 import * as React from "react";
 import style from "./PhotoTrayThumbnailList.module.css";
 import PhotoTrayThumbnail from "../PhotoTrayThumbnail/PhotoTrayThumbnail";
-import { JournalImage } from "@/helpers/indexdb";
 import useHotkeyDelete from "../../../../hooks/use-hotkey-delete-photo-resource";
 import useHotkeyImageNav from "../../../../hooks/use-hotkey-photo-nav";
+import { JournalImage } from "@/helpers/data-types";
+import { JournalContext } from "@/components/JournalContextProvider/JournalContextProvider";
 
 type Props = {
   images: Array<JournalImage>;
-  deleteImage: (id: string) => void;
 };
 
 function PhotoTrayThumbnailList({
   images,
-  deleteImage,
 }: React.PropsWithoutRef<Props>) {
   const [selectedImageId, setSelectedImageId] = React.useState<string | null>(
     null
   );
+  const journalContext = React.useContext(JournalContext);
 
   // See if selected image id is no longer valid, and clear if so.
   // This happens if `images` has updated, causing a rerender but not clearing all state.
@@ -33,10 +33,10 @@ function PhotoTrayThumbnailList({
     if (!imageToDelete) {
       throw new Error('assertion error -- image to delete was not found')
     }
-    deleteImage(imageToDelete.id);
+    journalContext.deleteLoadedImage(imageToDelete.id);
   };
-  useHotkeyDelete(selectedImageId, () => deleteSelectedImage());
-  useHotkeyImageNav(images, selectedImageId, setSelectedImageId);
+  useHotkeyDelete(selectedImageId, () => deleteSelectedImage(), [journalContext]);
+  useHotkeyImageNav(images, selectedImageId, setSelectedImageId, [journalContext]);
 
   return (
     <div

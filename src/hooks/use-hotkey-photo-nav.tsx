@@ -1,10 +1,12 @@
+import { DependencyList } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 
 function useHotkeyImageNav(
   images: Array<any>,
   selectedId: string|null,
   setSelectedId: (selectedId: string|null) => void,
-  itemsPerRow = 1
+  deps: DependencyList,
+  itemsPerRow = 1,
 ) {
   function getIndex(selectedId: string) {
     return images.findIndex((image) => image.id === selectedId);
@@ -25,7 +27,7 @@ function useHotkeyImageNav(
       }
     },
     { preventDefault: true },
-    [images, selectedId, setSelectedId]
+    [images, selectedId, setSelectedId, ...deps]
   );
   useHotkeys(
     "right",
@@ -40,7 +42,7 @@ function useHotkeyImageNav(
       }
     },
     { preventDefault: true },
-    [images, selectedId, setSelectedId]
+    [images, selectedId, setSelectedId, ...deps]
   );
   useHotkeys(
     "up",
@@ -55,7 +57,7 @@ function useHotkeyImageNav(
       }
     },
     { preventDefault: true },
-    [images, selectedId, setSelectedId]
+    [images, selectedId, setSelectedId, ...deps]
   );
   useHotkeys(
     "down",
@@ -70,7 +72,7 @@ function useHotkeyImageNav(
       }
     },
     { preventDefault: true },
-    [images, selectedId, setSelectedId]
+    [images, selectedId, setSelectedId, ...deps]
   );
   useHotkeys(
     "escape",
@@ -81,7 +83,7 @@ function useHotkeyImageNav(
       setSelectedId(null);
     },
     { preventDefault: true },
-    [images, selectedId, setSelectedId]
+    [images, selectedId, setSelectedId, ...deps]
   );
 }
 

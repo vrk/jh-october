@@ -68,7 +68,6 @@ function useSaveSpreadSnapshot(
         (s) => s.id === currentSpreadId
       );
       if (!currentSpread) {
-        debugger;
         throw new Error("assertion error");
       }
       await updateSpreadThumbnail(

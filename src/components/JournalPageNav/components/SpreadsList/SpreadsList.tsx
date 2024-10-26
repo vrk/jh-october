@@ -7,29 +7,29 @@ import useHotkeyImageNav from "@/hooks/use-hotkey-photo-nav";
 import useHotkeyDelete from "@/hooks/use-hotkey-delete-photo-resource";
 
 function SpreadsList() {
-  const { allSpreads, setCurrentSpreadId, deleteSpread } = React.useContext(JournalContext);
+  const journalContext = React.useContext(JournalContext);
 
   const [selectedThumbnailId, setSelectedThumbnailId] = React.useState<
     string | null
   >(null);
-  useHotkeyImageNav(allSpreads, selectedThumbnailId, (id: string | null) => {
+  useHotkeyImageNav(journalContext.allSpreads, selectedThumbnailId, (id: string | null) => {
     setSelectedThumbnailId(id);
     if (id) {
-      setCurrentSpreadId(id);
+      journalContext.setCurrentSpreadId(id);
     }
-  });
+  }, [journalContext]);
 
   const deleteSelectedSpread = async () => {
     if (!selectedThumbnailId) {
       return;
     }
-    await deleteSpread(selectedThumbnailId);
+    await journalContext.deleteSpread(selectedThumbnailId);
     setSelectedThumbnailId(null);
   };
-  useHotkeyDelete(selectedThumbnailId, () => deleteSelectedSpread());
+  useHotkeyDelete(selectedThumbnailId, () => deleteSelectedSpread(), [journalContext]);
   return (
     <div className={style.container}>
-      {allSpreads.map((spread, index) => (
+      {journalContext.allSpreads.map((spread, index) => (
         <SpreadListItem
           key={spread.id}
           spread={spread}
@@ -37,7 +37,7 @@ function SpreadsList() {
           tabIndex={index}
           onBlur={() => setSelectedThumbnailId(null)}
           onFocus={() => {
-            setCurrentSpreadId(spread.id);
+            journalContext.setCurrentSpreadId(spread.id);
             setSelectedThumbnailId(spread.id);
           }}
         ></SpreadListItem>
