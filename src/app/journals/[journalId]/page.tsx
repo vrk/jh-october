@@ -4,6 +4,7 @@ import styles from "./journalid.module.css";
 import JournalGlobalNav from "@/components/JournalGlobalNav/JournalGlobalNav";
 import JournalContextProvider from "@/components/JournalContextProvider/JournalContextProvider";
 import JournalLayoutPage from "@/components/JournalLayoutPage";
+import PrintLayoutPage from "@/components/PrintLayoutPage";
 
 export enum PageScreen {
   JournalScreen,
@@ -39,6 +40,6 @@ function getScreenModule(screen: PageScreen) {
     case PageScreen.JournalScreen:
       return <JournalLayoutPage></JournalLayoutPage>;
     case PageScreen.PrintScreen:
-      return <JournalLayoutPage></JournalLayoutPage>;
+      return <PrintLayoutPage></PrintLayoutPage>;
   }
 }
