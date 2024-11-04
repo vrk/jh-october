@@ -1,45 +1,32 @@
 "use client";
 import * as React from "react";
 import styles from "./journalid.module.css";
-import JournalGlobalNav from "@/components/JournalGlobalNav/JournalGlobalNav";
 import JournalContextProvider from "@/components/JournalContextProvider/JournalContextProvider";
-import JournalLayoutPage from "@/components/JournalLayoutPage";
-import PrintLayoutPage from "@/components/PrintLayoutPage";
-
-export enum PageScreen {
-  JournalScreen,
-  PrintScreen,
-}
+import JournalLayoutNav from "@/components/JournalLayoutNav";
+import JournalPageNav from "@/components/JournalPageNav";
+import DragAndDropProvider from "@/components/DragAndDropProvider";
+import JournalToolbar from "@/components/JournalToolbar";
+import JournalSpreadView from "@/components/JournalSpreadView";
 
 export default function JournalPage({
   params,
 }: {
   params: { journalId: string };
 }) {
-  const [currentScreen, setCurrentScreen] = React.useState(
-    PageScreen.JournalScreen
-  );
-  const module = getScreenModule(currentScreen);
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <JournalContextProvider journalId={params.journalId}>
-          <JournalGlobalNav
-            currentScreen={currentScreen}
-            setCurrentScreen={setCurrentScreen}
-          ></JournalGlobalNav>
-          {module}
+          <JournalLayoutNav journalId={params.journalId}></JournalLayoutNav>
+          <DragAndDropProvider>
+            <div className={styles.inner}>
+              <JournalToolbar></JournalToolbar>
+              <JournalSpreadView></JournalSpreadView>
+            </div>
+          </DragAndDropProvider>
+          <JournalPageNav></JournalPageNav>
         </JournalContextProvider>
       </main>
     </div>
   );
-}
-
-function getScreenModule(screen: PageScreen) {
-  switch (screen) {
-    case PageScreen.JournalScreen:
-      return <JournalLayoutPage></JournalLayoutPage>;
-    case PageScreen.PrintScreen:
-      return <PrintLayoutPage></PrintLayoutPage>;
-  }
 }

@@ -1,0 +1,7 @@
+.container {
+  background-color: gray;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
