@@ -189,7 +189,9 @@ const JournalContextProvider = ({
 
     setAllPrintPagesState(allPrintPages);
     const [firstPage] = allPrintPages;
-    await setCurrentPrintPageIdAndUpdateItems(firstPage.id);
+    if (firstPage) {
+      await setCurrentPrintPageIdAndUpdateItems(firstPage.id);
+    }
   };
 
   React.useEffect(() => {
