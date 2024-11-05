@@ -1,14 +1,20 @@
 "use client";
 import React from "react";
 import * as database from "@/helpers/indexdb";
-import { JournalImage, PrintItem, PrintPage, Spread, SpreadItem } from "@/helpers/data-types";
+import {
+  JournalImage,
+  PrintItem,
+  PrintPage,
+  Spread,
+  SpreadItem,
+} from "@/helpers/data-types";
 
 type JournalContextType = {
   journalId: string | null;
   currentSpreadId: string | null;
   currentSpreadItems: Array<SpreadItem>;
   currentPrintPageId: string | null;
-  currentPrintItems: Array<SpreadItem>;
+  currentPrintItems: Array<PrintItem>;
 
   allSpreads: Array<Spread>;
   allPrintPages: Array<PrintPage>;
@@ -57,8 +63,11 @@ export const JournalContext = React.createContext<JournalContextType>({
   journalId: null,
   currentSpreadId: null,
   currentSpreadItems: [],
+  currentPrintPageId: null,
+  currentPrintItems: [],
 
   allSpreads: [],
+  allPrintPages: [],
   loadedImages: [],
   journalLoadedStatus: JournalLoadedStatus.Uninitialized,
 
@@ -75,13 +84,37 @@ export const JournalContext = React.createContext<JournalContextType>({
   },
   updateSpreadItem: async (item: SpreadItem) => {},
   deleteSpreadItems: async (idsToDelete: Array<string>) => {},
+  setCurrentPrintPageId: function (currentPrintPageId: string): void {
+    throw new Error("Function not implemented.");
+  },
+  addPrintPage: function (): Promise<void> {
+    throw new Error("Function not implemented.");
+  },
+  deletePrintPage: function (spreadId: string): Promise<void> {
+    throw new Error("Function not implemented.");
+  },
+  addPrintItem: function (
+    spreadItemId: string,
+    top: number,
+    left: number
+  ): Promise<PrintItem> {
+    throw new Error("Function not implemented.");
+  },
+  updatePrintItem: function (item: PrintItem): Promise<void> {
+    throw new Error("Function not implemented.");
+  },
+  deletePrintItems: function (idsToDelete: Array<string>): Promise<void> {
+    throw new Error("Function not implemented.");
+  },
 });
 const JournalContextProvider = ({
   journalId,
   children,
 }: React.PropsWithChildren<JournalContextProps>) => {
   const [allSpreads, setAllSpreadsState] = React.useState<Array<Spread>>([]);
-  const [allPrintPages, setAllPrintPagesState] = React.useState<Array<PrintPage>>([]);
+  const [allPrintPages, setAllPrintPagesState] = React.useState<
+    Array<PrintPage>
+  >([]);
   const [currentSpreadId, setCurrentSpreadIdState] = React.useState<
     string | null
   >(null);
@@ -108,9 +141,13 @@ const JournalContextProvider = ({
     setCurrentSpreadItemsState(spreadItems);
   };
 
-  const setCurrentPrintPageIdAndUpdateItems = async (newPrintPageId: string) => {
+  const setCurrentPrintPageIdAndUpdateItems = async (
+    newPrintPageId: string
+  ) => {
     setCurrentPrintPageIdState(newPrintPageId);
-    const printPageItems = await database.getAllPrintItemsForPage(newPrintPageId);
+    const printPageItems = await database.getAllPrintItemsForPage(
+      newPrintPageId
+    );
     setCurrentPrintItemsState(printPageItems);
   };
 
@@ -199,16 +236,19 @@ const JournalContextProvider = ({
     const allButSpread = allSpreads.filter((i) => i.id !== idToDelete);
     setAllSpreadsState([...allButSpread]);
 
-    // Update loaded images 
-    const newLoadedImages = getLoadedImagesWithoutSpread(idToDelete, loadedImages);
+    // Update loaded images
+    const newLoadedImages = getLoadedImagesWithoutSpread(
+      idToDelete,
+      loadedImages
+    );
     setLoadedImagesState(newLoadedImages);
 
     if (idToDelete === currentSpreadId) {
       const [firstSpread] = allButSpread;
       if (!firstSpread) {
-        throw new Error('assertion error - deleted last spread')
+        throw new Error("assertion error - deleted last spread");
       }
-      setCurrentSpreadIdAndUpdateItems(firstSpread.id)
+      setCurrentSpreadIdAndUpdateItems(firstSpread.id);
     }
   };
 
@@ -221,13 +261,15 @@ const JournalContextProvider = ({
     if (idToDelete === currentPrintPageId) {
       const [firstPage] = allButPage;
       if (!firstPage) {
-        throw new Error('assertion error - deleted last spread')
+        throw new Error("assertion error - deleted last spread");
       }
-      setCurrentPrintPageIdAndUpdateItems(firstPage.id)
+      setCurrentPrintPageIdAndUpdateItems(firstPage.id);
     }
   };
 
-  const setCurrentSpreadItemsAndUpdateLoadedImages = (items: Array<SpreadItem>) => {
+  const setCurrentSpreadItemsAndUpdateLoadedImages = (
+    items: Array<SpreadItem>
+  ) => {
     if (!currentSpreadId) {
       throw new Error("assertion error");
     }
@@ -251,17 +293,16 @@ const JournalContextProvider = ({
       fabricJsMetadata
     );
 
-    setCurrentSpreadItemsAndUpdateLoadedImages([...currentSpreadItems, spreadItem]);
+    setCurrentSpreadItemsAndUpdateLoadedImages([
+      ...currentSpreadItems,
+      spreadItem,
+    ]);
     return spreadItem;
   };
 
   const setCurrentSpreadId = async (spreadId: string) => {
     return setCurrentSpreadIdAndUpdateItems(spreadId);
-  }
-
-  const setCurrentPrintPageId = async (printPageId: string) => {
-    return setCurrentPrintPageIdAndUpdateItems(printPageId);
-  }
+  };
 
   const updateSpreadItem = async (updatedItem: SpreadItem) => {
     const otherSpreadItems = currentSpreadItems.filter(
@@ -293,6 +334,61 @@ const JournalContextProvider = ({
     await Promise.all(deletionPromises);
   };
 
+  const addPrintItem = async (
+    spreadItemId: string,
+    top: number,
+    left: number
+  ) => {
+    if (!currentPrintPageId) {
+      throw new Error("assertion error: current spread id is null");
+    }
+
+    const printItem = await database.createPrintItem(
+      currentPrintPageId,
+      spreadItemId,
+      top,
+      left
+    );
+
+    setCurrentPrintItemsState([...currentPrintItems, printItem]);
+    return printItem;
+  };
+
+  const setCurrentPrintPageId = async (printPageId: string) => {
+    return setCurrentPrintPageIdAndUpdateItems(printPageId);
+  };
+
+  const updatePrintItem = async (updatedItem: PrintItem) => {
+    const otherPrintItems = currentPrintItems.filter(
+      (i) => updatedItem.id !== i.id
+    );
+    const newPrintItems = [...otherPrintItems, updatedItem];
+    setCurrentPrintItemsState(newPrintItems);
+    await database.updatePrintItem(
+      updatedItem.id,
+      updatedItem.printPageId,
+      updatedItem.spreadItemId,
+      updatedItem.top,
+      updatedItem.left
+    );
+  };
+
+  const deletePrintItems = async (deletedPrintItemIds: Array<string>) => {
+    const newPrintItems = currentPrintItems.filter((current) => {
+      if (deletedPrintItemIds.includes(current.id)) {
+        return false;
+      }
+      return true;
+    });
+
+    setCurrentPrintItemsState([...newPrintItems]);
+
+    const deletionPromises = deletedPrintItemIds.map((printItemId) =>
+      database.deletePrintItem(printItemId)
+    );
+    await Promise.all(deletionPromises);
+  };
+
   return (
     <JournalContext.Provider
       value={{
@@ -300,19 +396,25 @@ const JournalContextProvider = ({
         journalLoadedStatus,
         currentSpreadId,
         currentSpreadItems,
+        currentPrintPageId,
+        currentPrintItems,
         loadedImages,
         allSpreads,
-        addSpread,
-        addPrintPage,
+        allPrintPages,
         addLoadedImages,
-        setCurrentSpreadId,
-        setCurrentPrintPageId,
         deleteLoadedImage,
+        addSpread,
         deleteSpread,
+        setCurrentSpreadId,
+        addPrintPage,
         deletePrintPage,
+        setCurrentPrintPageId,
         addSpreadItem,
         updateSpreadItem,
         deleteSpreadItems,
+        addPrintItem,
+        updatePrintItem,
+        deletePrintItems,
       }}
     >
       {children}

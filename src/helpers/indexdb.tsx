@@ -394,6 +394,82 @@ async function createSpreadItemInDatabase(
   });
 }
 
+export async function createPrintItem(
+  printPageId: string,
+  spreadItemId: string,
+  top: number,
+  left: number
+): Promise<PrintItem> {
+  const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
+  const id = shortIDGenerator.randomUUID();
+  return createPrintItemInDatabase(id, printPageId, spreadItemId, top, left);
+}
+
+export async function updatePrintItem(
+  id: string,
+  printPageId: string | null,
+  spreadItemId: string,
+  top: number,
+  left: number
+): Promise<PrintItem> {
+  return createPrintItemInDatabase(
+    id,
+    printPageId,
+    spreadItemId,
+    top,
+    left,
+    true
+  );
+}
+
+async function createPrintItemInDatabase(
+  id: string,
+  printPageId: string | null,
+  spreadItemId: string,
+  top: number,
+  left: number,
+  usePut = false
+): Promise<PrintItem> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_ITEMS_STORE_NAME, "readwrite");
+    const printItemsStore = transaction.objectStore(PRINT_ITEMS_STORE_NAME);
+
+    const printItem: PrintItem = {
+      top,
+      left,
+      spreadItemId,
+      printPageId,
+      id,
+    };
+
+    const request = usePut
+      ? printItemsStore.put(printItem)
+      : printItemsStore.add(printItem);
+    request.onerror = () => {
+      reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(printItem);
+    };
+  });
+}
+
+export async function deletePrintItem(printItemId: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_ITEMS_STORE_NAME, "readwrite");
+    const printItemStore = transaction.objectStore(PRINT_ITEMS_STORE_NAME);
+    const request = printItemStore.delete(printItemId);
+    request.onerror = () => {
+      reject(`Requested printItemId could not be deleted: ${printItemId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
 type JournalImageParam = {
   journalId: string;
   dataUrl: string;
@@ -677,3 +753,4 @@ export async function deletePrintPage(printPageId: string) {
     };
   });
 }
+

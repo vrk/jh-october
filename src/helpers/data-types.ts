@@ -55,8 +55,8 @@ export type SpreadItem = {
 
 export type PrintItem = {
   id: string;
-  printPageId: string;
-  spreadItemId: string|null;
+  printPageId: string | null;
+  spreadItemId: string;
   top: number;
   left: number;
 };
