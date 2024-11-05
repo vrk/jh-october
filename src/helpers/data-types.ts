@@ -33,6 +33,16 @@ export type Spread = {
   previewThumbWidth?: number;
 };
 
+export type PrintPage  = {
+  id: string;
+  journalId: string;
+  order: number;
+
+  previewThumbUrl?: string;
+  previewThumbHeight?: number;
+  previewThumbWidth?: number;
+};
+
 // TODO: lol make this better if at all feasible (might not be)
 export type FabricJsMetadata = any;
 
@@ -41,4 +51,12 @@ export type SpreadItem = {
   spreadId: string;
   imageId: string;
   fabricjsMetadata: FabricJsMetadata;
+};
+
+export type PrintItem = {
+  id: string;
+  printPageId: string;
+  spreadItemId: string|null;
+  top: number;
+  left: number;
 };

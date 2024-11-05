@@ -7,6 +7,8 @@ import {
   Spread,
   SpreadItem,
   FabricJsMetadata,
+  PrintItem,
+  PrintPage,
 } from "./data-types";
 
 const DATABASE_NAME = "OctoberJournalHelperDb";
@@ -23,8 +25,18 @@ const SPREAD_ITEMS_STORE_NAME = "spread_items";
 const SPREAD_ITEM_TO_SPREAD_ID_INDEX_NAME = "spread_item_spread_id";
 const SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME = "spread_item_image_id";
 
+const PRINT_PAGES_STORE_NAME = "print_pages";
+const PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME = "print_pages_journal_id";
+
+const PRINT_ITEMS_STORE_NAME = "print_items";
+const PRINT_ITEM_TO_PAGE_ID_INDEX_NAME = "print_item_page_id";
+const PRINT_ITEM_TO_SPREAD_ITEM_ID_INDEX_NAME = "print_item_spread_item_id";
+
 // TODO: make this less fragile
 const JOURNAL_ID_KEY_NAME = "journalId"; // CAREFUL!! MUST MATCH JOURNALIMAGE TYPE FIELD
+
+const PAGE_ID_KEY_NAME = "printPageId"; // CAREFUL!! MUST MATCH PAGE TYPE FIELD
+const SPREAD_ITEM_ID_KEY_NAME = "spreadItemId"; // CAREFUL!! MUST MATCH PAGE TYPE FIELD
 
 const SPREAD_ID_KEY_NAME = "spreadId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
 const IMAGES_ID_KEY_NAME = "imageId"; // CAREFUL!! MUST MATCH SPREAD TYPE FIELD
@@ -86,6 +98,35 @@ export async function getDatabase(): Promise<IDBDatabase> {
       spreadItemsStore.createIndex(
         SPREAD_ITEM_TO_IMAGE_ID_INDEX_NAME,
         IMAGES_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
+
+      const printPagesStore = db.createObjectStore(PRINT_PAGES_STORE_NAME, {
+        keyPath: "id",
+      });
+      printPagesStore.createIndex(
+        PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME,
+        JOURNAL_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
+
+      const printItemsStore = db.createObjectStore(PRINT_ITEMS_STORE_NAME, {
+        keyPath: "id",
+      });
+      printItemsStore.createIndex(
+        PRINT_ITEM_TO_PAGE_ID_INDEX_NAME,
+        PAGE_ID_KEY_NAME,
+        {
+          unique: false,
+        }
+      );
+      printItemsStore.createIndex(
+        PRINT_ITEM_TO_SPREAD_ITEM_ID_INDEX_NAME,
+        SPREAD_ITEM_ID_KEY_NAME,
         {
           unique: false,
         }
@@ -195,6 +236,23 @@ async function getNumberOfSpreadsForJournal(
   });
 }
 
+async function getNumberOfPrintPagesForJournal(
+  printPageStore: IDBObjectStore,
+  journalId: string
+): Promise<number> {
+  return new Promise(async (resolve, reject) => {
+    const journalIdIndex = printPageStore.index(PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME);
+    const countRequest = journalIdIndex.count(IDBKeyRange.only(journalId));
+
+    countRequest.onerror = () => {
+      reject(`Could not count objects with journal ID: ${journalId}`);
+    };
+    countRequest.onsuccess = () => {
+      resolve(countRequest.result);
+    };
+  });
+}
+
 // Adds new spread to the end of the journal
 export async function createSpread(journalId: string): Promise<Spread> {
   return new Promise(async (resolve, reject) => {
@@ -215,6 +273,35 @@ export async function createSpread(journalId: string): Promise<Spread> {
       order: numberSpreads, // always add to end for now
     };
     const request = objectStore.add(spread);
+    request.onerror = () => {
+      reject(`Could not create object with id: ${id}`);
+    };
+    request.onsuccess = () => {
+      resolve(spread);
+    };
+  });
+}
+
+// Adds new page to the end of print
+export async function createPrintPage(journalId: string): Promise<PrintPage> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_PAGES_STORE_NAME, "readwrite");
+    const printPagesStore = transaction.objectStore(PRINT_PAGES_STORE_NAME);
+    const shortIDGenerator = new ShortUniqueId({ length: ID_LENGTH });
+    const id = shortIDGenerator.randomUUID();
+
+    // count how many spreads we have already to get us the `order` info
+    const numberSpreads = await getNumberOfPrintPagesForJournal(
+      printPagesStore,
+      journalId
+    );
+    const spread: PrintPage = {
+      id,
+      journalId,
+      order: numberSpreads, // always add to end for now
+    };
+    const request = printPagesStore.add(spread);
     request.onerror = () => {
       reject(`Could not create object with id: ${id}`);
     };
@@ -421,6 +508,46 @@ export async function getAllSpreadItemsForSpread(
   });
 }
 
+export async function getAllPrintPagesForJournal(
+  journalId: string
+): Promise<Array<PrintPage>> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_PAGES_STORE_NAME);
+    const printPagesStore = transaction.objectStore(PRINT_PAGES_STORE_NAME);
+    const pagesWithJournalIdIndex = printPagesStore.index(
+      PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME
+    );
+    const request = pagesWithJournalIdIndex.getAll(journalId);
+    request.onerror = () => {
+      reject(`Requested journal ID is not found: ${journalId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
+export async function getAllPrintItemsForPage(
+  printPageId: string
+): Promise<Array<PrintItem>> {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_ITEMS_STORE_NAME);
+    const printItemsStore = transaction.objectStore(PRINT_ITEMS_STORE_NAME);
+    const printItemWithPrintPageIdIndex = printItemsStore.index(
+      PRINT_ITEM_TO_PAGE_ID_INDEX_NAME
+    );
+    const request = printItemWithPrintPageIdIndex.getAll(printPageId);
+    request.onerror = () => {
+      reject(`Requested spreadId is not found: ${printPageId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
 export async function getAllImagesForJournal(
   journalId: string
 ): Promise<Array<DBJournalImage>> {
@@ -503,6 +630,47 @@ export async function deleteSpreadItem(spreadItemId: string) {
     const request = spreadItemStore.delete(spreadItemId);
     request.onerror = () => {
       reject(`Requested spreadItemId could not be deleted: ${spreadItemId}`);
+    };
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+  });
+}
+
+function deleteAllPrintItemsForPage(printPageId: string) {
+  return new Promise(async (resolve, reject) => {
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_ITEMS_STORE_NAME, "readwrite");
+    const printItemsStore = transaction.objectStore(PRINT_ITEMS_STORE_NAME);
+    const printItemsByPageIdIndex = printItemsStore.index(
+      PRINT_ITEM_TO_PAGE_ID_INDEX_NAME
+    );
+    const request = printItemsByPageIdIndex.openCursor(printPageId);
+    request.onerror = () => {
+      reject(`Requested spreadId is not found: ${printPageId}`);
+    };
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (cursor) {
+        cursor.delete();
+        cursor.continue();
+      } else {
+        resolve(true);
+      }
+    };
+  });
+}
+
+export async function deletePrintPage(printPageId: string) {
+  return new Promise(async (resolve, reject) => {
+    await deleteAllPrintItemsForPage(printPageId);
+
+    const db = await getDatabase();
+    const transaction = db.transaction(PRINT_PAGES_STORE_NAME, "readwrite");
+    const printPagesStore = transaction.objectStore(PRINT_PAGES_STORE_NAME);
+    const request = printPagesStore.delete(printPageId);
+    request.onerror = () => {
+      reject(`Requested spread ID could not be deleted: ${printPageId}`);
     };
     request.onsuccess = () => {
       resolve(request.result);

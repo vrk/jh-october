@@ -1,25 +1,31 @@
 "use client";
 import React from "react";
 import * as database from "@/helpers/indexdb";
-import { JournalImage, Spread, SpreadItem } from "@/helpers/data-types";
+import { JournalImage, PrintItem, PrintPage, Spread, SpreadItem } from "@/helpers/data-types";
 
 type JournalContextType = {
   journalId: string | null;
   currentSpreadId: string | null;
   currentSpreadItems: Array<SpreadItem>;
+  currentPrintPageId: string | null;
+  currentPrintItems: Array<SpreadItem>;
 
   allSpreads: Array<Spread>;
+  allPrintPages: Array<PrintPage>;
   loadedImages: Array<JournalImage>;
 
   journalLoadedStatus: JournalLoadedStatus;
 
   setCurrentSpreadId: (currentSpreadId: string) => void;
+  setCurrentPrintPageId: (currentPrintPageId: string) => void;
 
   addLoadedImages: (loadedImages: Array<JournalImage>) => Promise<void>;
   deleteLoadedImage: (idToDelete: string) => Promise<void>;
 
   addSpread: () => Promise<void>;
   deleteSpread: (spreadId: string) => Promise<void>;
+  addPrintPage: () => Promise<void>;
+  deletePrintPage: (spreadId: string) => Promise<void>;
 
   addSpreadItem: (
     imageId: string,
@@ -27,6 +33,14 @@ type JournalContextType = {
   ) => Promise<SpreadItem>;
   updateSpreadItem: (item: SpreadItem) => Promise<void>;
   deleteSpreadItems: (idsToDelete: Array<string>) => Promise<void>;
+
+  addPrintItem: (
+    spreadItemId: string,
+    top: number,
+    left: number
+  ) => Promise<PrintItem>;
+  updatePrintItem: (item: PrintItem) => Promise<void>;
+  deletePrintItems: (idsToDelete: Array<string>) => Promise<void>;
 };
 
 type JournalContextProps = {
@@ -67,11 +81,18 @@ const JournalContextProvider = ({
   children,
 }: React.PropsWithChildren<JournalContextProps>) => {
   const [allSpreads, setAllSpreadsState] = React.useState<Array<Spread>>([]);
+  const [allPrintPages, setAllPrintPagesState] = React.useState<Array<PrintPage>>([]);
   const [currentSpreadId, setCurrentSpreadIdState] = React.useState<
     string | null
   >(null);
   const [currentSpreadItems, setCurrentSpreadItemsState] = React.useState<
     Array<SpreadItem>
+  >([]);
+  const [currentPrintPageId, setCurrentPrintPageIdState] = React.useState<
+    string | null
+  >(null);
+  const [currentPrintItems, setCurrentPrintItemsState] = React.useState<
+    Array<PrintItem>
   >([]);
   // TODO: Check perf of this
   const [loadedImages, setLoadedImagesState] = React.useState<
@@ -85,6 +106,12 @@ const JournalContextProvider = ({
     setCurrentSpreadIdState(newSpreadId);
     const spreadItems = await database.getAllSpreadItemsForSpread(newSpreadId);
     setCurrentSpreadItemsState(spreadItems);
+  };
+
+  const setCurrentPrintPageIdAndUpdateItems = async (newPrintPageId: string) => {
+    setCurrentPrintPageIdState(newPrintPageId);
+    const printPageItems = await database.getAllPrintItemsForPage(newPrintPageId);
+    setCurrentPrintItemsState(printPageItems);
   };
 
   const initalizeContext = async () => {
@@ -106,6 +133,16 @@ const JournalContextProvider = ({
       journalId
     );
     setLoadedImagesState(loadedImages);
+
+    // Now load the print pages
+    const allPrintPages = await database.getAllPrintPagesForJournal(journalId);
+    allPrintPages.sort((a, b) => {
+      return a.order - b.order;
+    });
+
+    setAllPrintPagesState(allPrintPages);
+    const [firstPage] = allPrintPages;
+    await setCurrentPrintPageIdAndUpdateItems(firstPage.id);
   };
 
   React.useEffect(() => {
@@ -147,6 +184,14 @@ const JournalContextProvider = ({
     setAllSpreadsState([...allSpreads, newSpread]);
   };
 
+  const addPrintPage = async () => {
+    const newPrintPage = await database.createPrintPage(journalId);
+
+    setCurrentPrintPageIdState(newPrintPage.id);
+    setCurrentPrintItemsState([]);
+    setAllPrintPagesState([...allPrintPages, newPrintPage]);
+  };
+
   const deleteSpread = async (idToDelete: string) => {
     await database.deleteSpread(idToDelete);
 
@@ -164,6 +209,21 @@ const JournalContextProvider = ({
         throw new Error('assertion error - deleted last spread')
       }
       setCurrentSpreadIdAndUpdateItems(firstSpread.id)
+    }
+  };
+
+  const deletePrintPage = async (idToDelete: string) => {
+    await database.deletePrintPage(idToDelete);
+
+    const allButPage = allPrintPages.filter((i) => i.id !== idToDelete);
+    setAllPrintPagesState([...allButPage]);
+
+    if (idToDelete === currentPrintPageId) {
+      const [firstPage] = allButPage;
+      if (!firstPage) {
+        throw new Error('assertion error - deleted last spread')
+      }
+      setCurrentPrintPageIdAndUpdateItems(firstPage.id)
     }
   };
 
@@ -197,6 +257,10 @@ const JournalContextProvider = ({
 
   const setCurrentSpreadId = async (spreadId: string) => {
     return setCurrentSpreadIdAndUpdateItems(spreadId);
+  }
+
+  const setCurrentPrintPageId = async (printPageId: string) => {
+    return setCurrentPrintPageIdAndUpdateItems(printPageId);
   }
 
   const updateSpreadItem = async (updatedItem: SpreadItem) => {
@@ -239,10 +303,13 @@ const JournalContextProvider = ({
         loadedImages,
         allSpreads,
         addSpread,
+        addPrintPage,
         addLoadedImages,
         setCurrentSpreadId,
+        setCurrentPrintPageId,
         deleteLoadedImage,
         deleteSpread,
+        deletePrintPage,
         addSpreadItem,
         updateSpreadItem,
         deleteSpreadItems,
