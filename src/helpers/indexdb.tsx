@@ -584,6 +584,47 @@ export async function getAllSpreadItemsForSpread(
   });
 }
 
+export async function getAllSpreadItemsForJournal(
+  journalId: string
+): Promise<Array<SpreadItem>> {
+  return new Promise(async (resolve, reject) => {
+    const allSpreads = await getAllSpreadsForJournal(journalId);
+
+    const db = await getDatabase();
+    const transaction = db.transaction(SPREAD_ITEMS_STORE_NAME);
+    const spreadItemsStore = transaction.objectStore(SPREAD_ITEMS_STORE_NAME);
+    const request = spreadItemsStore.openCursor();
+
+    const allSpreadItems: Array<SpreadItem> = [];
+
+    const isInJournal = (cursor: IDBCursorWithValue) => {
+      const result = allSpreads.find((spread) => {
+        spread.id === cursor.value.spreadId
+      });
+      return result !== undefined;
+    };
+
+    request.onsuccess = () =>  {
+      const cursor = request.result;
+      if (cursor && isInJournal(cursor)) {
+        const spreadItem: SpreadItem = {
+          id: cursor.value.id,
+          spreadId: cursor.value.spreadId,
+          imageId: cursor.value.imageId,
+          fabricjsMetadata: cursor.value.fabricjsMetadata
+        };
+        allSpreadItems.push(spreadItem);
+        cursor.continue();
+      } else {
+        resolve(allSpreadItems);
+      }
+    };
+    request.onerror = () => {
+      reject("Could not get all spread items");
+    };
+  });
+}
+
 export async function getAllPrintPagesForJournal(
   journalId: string
 ): Promise<Array<PrintPage>> {

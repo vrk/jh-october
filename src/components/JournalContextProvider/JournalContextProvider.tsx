@@ -17,6 +17,7 @@ type JournalContextType = {
   currentPrintItems: Array<PrintItem>;
 
   allSpreads: Array<Spread>;
+  allSpreadItems: Array<SpreadItem>;
   allPrintPages: Array<PrintPage>;
   loadedImages: Array<JournalImage>;
 
@@ -67,6 +68,7 @@ export const JournalContext = React.createContext<JournalContextType>({
   currentPrintItems: [],
 
   allSpreads: [],
+  allSpreadItems: [],
   allPrintPages: [],
   loadedImages: [],
   journalLoadedStatus: JournalLoadedStatus.Uninitialized,
@@ -112,6 +114,9 @@ const JournalContextProvider = ({
   children,
 }: React.PropsWithChildren<JournalContextProps>) => {
   const [allSpreads, setAllSpreadsState] = React.useState<Array<Spread>>([]);
+  const [allSpreadItems, setAllSpreadItemsState] = React.useState<
+    Array<SpreadItem>
+  >([]);
   const [allPrintPages, setAllPrintPagesState] = React.useState<
     Array<PrintPage>
   >([]);
@@ -164,6 +169,11 @@ const JournalContextProvider = ({
     setAllSpreadsState(allSpreads);
     const [firstSpread] = allSpreads;
     await setCurrentSpreadIdAndUpdateItems(firstSpread.id);
+
+    const allSpreadItems = await database.getAllSpreadItemsForJournal(
+      journalId
+    );
+    setAllSpreadItemsState([...allSpreadItems]);
 
     // Now load all the images
     const loadedImages = await database.getImagesForJournalWithUsageInformation(
@@ -250,6 +260,9 @@ const JournalContextProvider = ({
       }
       setCurrentSpreadIdAndUpdateItems(firstSpread.id);
     }
+
+    const remainingSpreadItems = allSpreadItems.filter(i => i.spreadId !== idToDelete);
+    setAllSpreadItemsState([...remainingSpreadItems]);
   };
 
   const deletePrintPage = async (idToDelete: string) => {
@@ -297,6 +310,7 @@ const JournalContextProvider = ({
       ...currentSpreadItems,
       spreadItem,
     ]);
+    setAllSpreadItemsState([...allSpreadItems, spreadItem]);
     return spreadItem;
   };
 
@@ -305,11 +319,17 @@ const JournalContextProvider = ({
   };
 
   const updateSpreadItem = async (updatedItem: SpreadItem) => {
-    const otherSpreadItems = currentSpreadItems.filter(
+    const otherCurrentSpreadItems = currentSpreadItems.filter(
       (i) => updatedItem.id !== i.id
     );
-    const newSpreadItems = [...otherSpreadItems, updatedItem];
-    setCurrentSpreadItemsAndUpdateLoadedImages(newSpreadItems);
+    const newCurrentSpreadItems = [...otherCurrentSpreadItems, updatedItem];
+    setCurrentSpreadItemsAndUpdateLoadedImages(newCurrentSpreadItems);
+
+    const otherSpreadItems = allSpreadItems.filter(
+      (i) => updatedItem.id !== i.id
+    );
+    setAllSpreadItemsState([...otherSpreadItems, updatedItem]);
+
     await database.updateSpreadItem(
       updatedItem.id,
       updatedItem.spreadId,
@@ -319,14 +339,22 @@ const JournalContextProvider = ({
   };
 
   const deleteSpreadItems = async (deletedSpreadIds: Array<string>) => {
-    const newSpreadItems = currentSpreadItems.filter((current) => {
+    const newCurrentSpreadItems = currentSpreadItems.filter((current) => {
       if (deletedSpreadIds.includes(current.id)) {
         return false;
       }
       return true;
     });
 
-    setCurrentSpreadItemsAndUpdateLoadedImages([...newSpreadItems]);
+    setCurrentSpreadItemsAndUpdateLoadedImages([...newCurrentSpreadItems]);
+
+    const allSpreadItemsWithoutDeleted =allSpreadItems.filter((current) => {
+      if (deletedSpreadIds.includes(current.id)) {
+        return false;
+      }
+      return true;
+    });
+    setAllSpreadItemsState([...allSpreadItemsWithoutDeleted]);
 
     const deletionPromises = deletedSpreadIds.map((spreadItemId) =>
       database.deleteSpreadItem(spreadItemId)
