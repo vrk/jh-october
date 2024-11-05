@@ -1,18 +1,19 @@
 "use client";
 import React from "react";
 
-import { FabricImage, Canvas, util, Rect, FabricObject } from "fabric";
+import { Canvas, Rect, FabricObject } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import {
-  loadFabricImageInCanvas,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
 } from "@/helpers/canvas-helpers";
 import style from "./PrintCanvas.module.css";
-import {
-  augmentFabricImageWithSpreadItemMetadata,
-  BACKGROUND_ID_VALUE,
-} from "@/helpers/editable-object";
+import { BACKGROUND_ID_VALUE } from "@/helpers/editable-object";
+import useCanvasMousewheel from "../JournalCanvas/hooks/use-canvas-mousewheel";
+import useCenterOnResize from "../JournalCanvas/hooks/use-center-on-resize";
+import useCanvasPan from "../JournalCanvas/hooks/use-canvas-pan";
+import useHotkeyZoom from "../JournalCanvas/hooks/use-hotkey-zoom";
+import { JournalImage, PrintItem, SpreadItem } from "@/helpers/data-types";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 8.5;
@@ -20,12 +21,24 @@ const DEFAULT_HEIGHT_IN_INCHES = 11;
 const DEFAULT_DOC_WIDTH = DEFAULT_WIDTH_IN_INCHES * DEFAULT_PPI;
 const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
 
-function PrintCanvas() {
+type Props = {
+  currentPrintPageId: string;
+  loadedImages: Array<JournalImage>;
+  currentPrintItems: Array<PrintItem>;
+  allSpreadItems: Array<SpreadItem>;
+};
+
+function PrintCanvas({}: Props) {
   const [fabricCanvas, initCanvas] = React.useContext(FabricContext);
   const overallContainer = React.useRef<HTMLDivElement>(null);
   const htmlCanvas = React.useRef<HTMLCanvasElement>(null);
   const [documentRectangle, setDocumentRectangle] =
     React.useState<FabricObject>();
+
+  useCanvasMousewheel(fabricCanvas, documentRectangle);
+  useCenterOnResize(fabricCanvas, overallContainer, documentRectangle);
+  useCanvasPan(fabricCanvas, documentRectangle);
+  useHotkeyZoom(fabricCanvas, documentRectangle);
 
   // Create the fabric canvas
   React.useEffect(() => {
@@ -36,24 +49,20 @@ function PrintCanvas() {
     const newlyMadeCanvas = new Canvas(htmlCanvas.current, {
       controlsAboveOverlay: true,
       renderOnAddRemove: false,
-      backgroundColor: 'gainsboro'
+      backgroundColor: "gainsboro",
     });
 
     initCanvas(newlyMadeCanvas);
-    console.log("vrk creating canvas");
-
     setCanvasDimensionsToWindowSize(newlyMadeCanvas, overallContainer.current);
 
     return () => {
-      console.log("vrk dispose canvas");
       newlyMadeCanvas.dispose();
     };
   }, [overallContainer, htmlCanvas]);
 
-  // Add Cousin Image to Fabric Canvas
+  // Add Document to Fabric Canvas
   React.useEffect(() => {
     if (fabricCanvas) {
-      console.log('what is happening');
       const rectangle = new Rect({
         id: `${BACKGROUND_ID_VALUE}`,
         stroke: "#4B624C",
@@ -79,6 +88,14 @@ function PrintCanvas() {
       }
     };
   }, [fabricCanvas]);
+
+  // Load print items
+  React.useEffect(() => {
+    if (!documentRectangle) {
+      return;
+    }
+
+  }, [fabricCanvas, documentRectangle]);
 
   const onCanvasBlur = () => {
     if (!fabricCanvas) {

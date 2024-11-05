@@ -1,9 +1,9 @@
 import React from "react";
-import { Canvas, FabricImage } from "fabric";
+import { Canvas, FabricObject } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
 import { zoomByDelta, panVerticallyByDelta } from "@/helpers/canvas-helpers";
 
-function useCanvasMousewheel(fabricCanvas: Canvas | null, documentRectangle: FabricImage | undefined) {
+function useCanvasMousewheel(fabricCanvas: Canvas | null, documentRectangle: FabricObject | undefined) {
   const [isAltKeyPressed, setIsAltKeyPressed] = React.useState(false);
   useHotkeys(
     "meta",

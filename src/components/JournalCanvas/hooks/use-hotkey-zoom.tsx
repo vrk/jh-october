@@ -1,4 +1,4 @@
-import { Canvas, FabricImage } from "fabric";
+import { Canvas, FabricObject } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
   zoomByDelta,
@@ -8,7 +8,7 @@ import {
 
 function useHotkeyZoom(
   fabricCanvas: Canvas | null,
-  documentRectangle: FabricImage | undefined
+  documentRectangle: FabricObject | undefined
 ) {
   useHotkeys(
     "meta+=",

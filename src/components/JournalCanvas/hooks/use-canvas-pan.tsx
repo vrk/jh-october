@@ -1,11 +1,11 @@
 import React from "react";
-import { Canvas, FabricImage, TPointerEventInfo } from "fabric";
+import { Canvas, FabricObject, TPointerEventInfo } from "fabric";
 import { useHotkeys } from "react-hotkeys-hook";
 import { enclose } from "@/helpers/canvas-helpers";
 
 function useCanvasPan(
   fabricCanvas: Canvas | null,
-  documentRectangle: FabricImage | undefined
+  documentRectangle: FabricObject | undefined
 ) {
   const [isSpacebarPressed, setIsSpacebarPressed] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);

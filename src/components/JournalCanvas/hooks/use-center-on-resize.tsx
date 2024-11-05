@@ -1,5 +1,5 @@
 import React from "react";
-import { Canvas, FabricImage } from "fabric";
+import { Canvas, FabricObject } from "fabric";
 import {
   setCanvasDimensionsToWindowSize,
   setCenterFromObject,
@@ -8,7 +8,7 @@ import {
 function useCenterOnResize(
   fabricCanvas: Canvas | null,
   overallContainer: React.RefObject<HTMLDivElement>,
-  documentRectangle: FabricImage | undefined
+  documentRectangle: FabricObject | undefined
 ) {
   React.useEffect(() => {
     const onWindowResize = () => {
