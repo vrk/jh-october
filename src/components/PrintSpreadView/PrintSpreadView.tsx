@@ -14,7 +14,7 @@ function PrintSpreadView() {
     allSpreadItems,
     journalLoadedStatus
   } = React.useContext(JournalContext);
-  if (!currentPrintPageId || journalLoadedStatus !== JournalLoadedStatus.Loaded) {
+  if (journalLoadedStatus !== JournalLoadedStatus.Loaded) {
     return <></>;
   }
   return (

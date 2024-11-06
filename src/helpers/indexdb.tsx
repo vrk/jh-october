@@ -598,14 +598,17 @@ export async function getAllSpreadItemsForJournal(
     const allSpreadItems: Array<SpreadItem> = [];
 
     const isInJournal = (cursor: IDBCursorWithValue) => {
+      console.log('all spreads', allSpreads);
       const result = allSpreads.find((spread) => {
-        spread.id === cursor.value.spreadId
+        return spread.id === cursor.value.spreadId
       });
+      console.log('result is', result);
       return result !== undefined;
     };
 
     request.onsuccess = () =>  {
       const cursor = request.result;
+      console.log('cursor value is', cursor?.value);
       if (cursor && isInJournal(cursor)) {
         const spreadItem: SpreadItem = {
           id: cursor.value.id,
@@ -613,6 +616,7 @@ export async function getAllSpreadItemsForJournal(
           imageId: cursor.value.imageId,
           fabricjsMetadata: cursor.value.fabricjsMetadata
         };
+        console.log('spread item is', spreadItem);
         allSpreadItems.push(spreadItem);
         cursor.continue();
       } else {

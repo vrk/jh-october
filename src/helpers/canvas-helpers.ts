@@ -1,7 +1,15 @@
 "use client";
 import { FabricImage, FabricObject, Canvas, util, filters } from "fabric";
-import { setEditableObjectProperties } from "./editable-object";
-import { FabricJsMetadata } from "./data-types";
+import {
+  augmentFabricImageWithSpreadItemMetadata,
+  setEditableObjectProperties,
+} from "./editable-object";
+import {
+  FabricJsMetadata,
+  JournalImage,
+  PrintItem,
+  SpreadItem,
+} from "./data-types";
 
 export function setCanvasDimensionsToWindowSize(
   canvas: Canvas,
@@ -87,7 +95,7 @@ export function addFabricImageToCanvas(
   canvas.viewportCenterObject(fabricImage);
   canvas.setActiveObject(fabricImage);
   const resizeFilter = new filters.Resize();
-  resizeFilter.resizeType = 'lanczos';
+  resizeFilter.resizeType = "lanczos";
   fabricImage.applyFilters([resizeFilter]);
   canvas.requestRenderAll();
 }
@@ -100,7 +108,7 @@ export function loadFabricImageInCanvas(
   canvas.add(fabricImage);
   canvas.bringObjectToFront(fabricImage);
   const resizeFilter = new filters.Resize();
-  resizeFilter.resizeType = 'lanczos';
+  resizeFilter.resizeType = "lanczos";
   fabricImage.applyFilters([resizeFilter]);
   canvas.requestRenderAll();
 }
@@ -123,7 +131,7 @@ export function getFabricImageWithoutSrc(
   fabricImage: FabricImage
 ): FabricJsMetadata {
   const metadataWithSrc = fabricImage.toObject();
-  console.log('TO OBJECT');
+  console.log("TO OBJECT");
 
   // Get all the metadata for the fabricImage, EXCEPT for the src
   const { src, ...fabricJsMetadata } = metadataWithSrc;
@@ -146,6 +154,35 @@ export function getFabricImageWithoutSrc(
   }
 
   return fabricJsMetadata;
+}
+
+export function addAllSpreadItemsToCanvas(
+  fabricCanvas: Canvas,
+  allSpreadItems: Array<SpreadItem>,
+  loadedImages: Array<JournalImage>
+) {
+  for (const spreadItem of allSpreadItems) {
+    const image = loadedImages.find(i => i.isUsedBySpreadItemId === spreadItem.id);
+    if (!image) {
+      throw new Error("assertion error -- all spread items should have a corresponding image");
+    }
+    addItemToCanvas(fabricCanvas, spreadItem, image);
+  }
+}
+
+export function addItemToCanvas(
+  fabricCanvas: Canvas,
+  spreadItem: SpreadItem, 
+  image: JournalImage
+) {
+    const fabricObjectData = spreadItem.fabricjsMetadata;
+    fabricObjectData.src = image.dataUrl;
+    // TODO: See if there's benefit of doing this all in a batch
+    util.enlivenObjects([fabricObjectData]).then(([object]) => {
+      const fabricImage = object as FabricImage;
+      augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
+      loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
+    });
 }
 
 /******

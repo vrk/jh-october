@@ -430,6 +430,7 @@ const JournalContextProvider = ({
         currentPrintItems,
         loadedImages,
         allSpreads,
+        allSpreadItems,
         allPrintPages,
         addLoadedImages,
         deleteLoadedImage,

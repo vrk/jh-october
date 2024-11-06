@@ -5,6 +5,7 @@ import { FabricImage, Canvas, util } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import hobonichiCousinimage from "./images/hobonichi-cousin-spread.png";
 import {
+  addItemToCanvas,
   loadFabricImageInCanvas,
   setCanvasDimensionsToWindowSize,
   zoomToFitDocument,
@@ -122,14 +123,7 @@ function JournalCanvas({
       if (!spreadItem) {
         throw new Error("assertion error");
       }
-      const fabricObjectData = spreadItem.fabricjsMetadata;
-      fabricObjectData.src = image.dataUrl;
-      // TODO: See if there's benefit of doing this all in a batch
-      util.enlivenObjects([fabricObjectData]).then(([object]) => {
-        const fabricImage = object as FabricImage;
-        augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
-        loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
-      });
+      addItemToCanvas(fabricCanvas, spreadItem, image);
     }
   }, [fabricCanvas, isCousinLoaded]);
 

@@ -3,6 +3,7 @@ import styles from "./print.module.css";
 import JournalContextProvider from "@/components/JournalContextProvider/JournalContextProvider";
 import PrintCanvas from "@/components/PrintCanvas";
 import PrintLayoutNav from "@/components/PrintLayoutNav";
+import PrintSpreadView from "@/components/PrintSpreadView";
 
 export default function PrintPage({
   params,
@@ -15,7 +16,7 @@ export default function PrintPage({
         <JournalContextProvider journalId={params.journalId}>
           <PrintLayoutNav journalId={params.journalId}></PrintLayoutNav>
           <div className={styles.inner}>
-            <PrintCanvas></PrintCanvas>
+            <PrintSpreadView></PrintSpreadView>
           </div>
         </JournalContextProvider>
       </main>
