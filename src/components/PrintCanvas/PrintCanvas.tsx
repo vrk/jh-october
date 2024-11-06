@@ -266,7 +266,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     // that can accommodate R, for which the residual horizontal space is the minimum.
     // If no level can accommodate R, a new level is created.
     return () => {
-      fabricCanvas.clear();
+      fabricCanvas.remove(...fabricCanvas.getObjects());
     };
   }, [fabricCanvas]);
 
