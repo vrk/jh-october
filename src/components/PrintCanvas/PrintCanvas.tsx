@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import { Canvas, Rect, FabricObject, util, FabricImage } from "fabric";
+import { Canvas, Rect, FabricObject, util, FabricImage, ImageFormat, filters } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import {
   addItemToCanvas,
@@ -17,7 +17,7 @@ import useCanvasMousewheel from "../JournalCanvas/hooks/use-canvas-mousewheel";
 import useCenterOnResize from "../JournalCanvas/hooks/use-center-on-resize";
 import useCanvasPan from "../JournalCanvas/hooks/use-canvas-pan";
 import useHotkeyZoom from "../JournalCanvas/hooks/use-hotkey-zoom";
-import { JournalImage, PrintItem, SpreadItem } from "@/helpers/data-types";
+import { JournalImage, SpreadItem } from "@/helpers/data-types";
 
 const DEFAULT_PPI = 300;
 const DEFAULT_WIDTH_IN_INCHES = 8.5;
@@ -72,9 +72,9 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     };
   }, [overallContainer, htmlCanvas]);
 
-  function createNewDocument(fabricCanvas: Canvas) {
+  function createNewDocument(fabricCanvas: Canvas, count: number) {
     const newDocRect = new Rect({
-      id: `${BACKGROUND_ID_VALUE}-${documentRectangles.length}`,
+      backgroundId: `${BACKGROUND_ID_VALUE}-${count}`,
       stroke: "#4B624C",
       strokeWidth: 10,
       selectable: false,
@@ -218,7 +218,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     const newDocs = [];
     const pages = layOutRowsInPages(rows);
     for (const page of pages) {
-      const doc = createNewDocument(fabricCanvas);
+      const doc = createNewDocument(fabricCanvas, newDocs.length);
       newDocs.push(doc);
       console.log(doc.left, doc.top);
       if (newDocs.length === 1) {
