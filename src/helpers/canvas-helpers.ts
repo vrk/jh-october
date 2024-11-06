@@ -162,27 +162,38 @@ export function addAllSpreadItemsToCanvas(
   loadedImages: Array<JournalImage>
 ) {
   for (const spreadItem of allSpreadItems) {
-    const image = loadedImages.find(i => i.isUsedBySpreadItemId === spreadItem.id);
+    const image = loadedImages.find(
+      (i) => i.isUsedBySpreadItemId === spreadItem.id
+    );
     if (!image) {
-      throw new Error("assertion error -- all spread items should have a corresponding image");
+      throw new Error(
+        "assertion error -- all spread items should have a corresponding image"
+      );
     }
     addItemToCanvas(fabricCanvas, spreadItem, image);
   }
 }
 
-export function addItemToCanvas(
-  fabricCanvas: Canvas,
-  spreadItem: SpreadItem, 
+export async function getFabricImage(
+  spreadItem: SpreadItem,
   image: JournalImage
 ) {
-    const fabricObjectData = spreadItem.fabricjsMetadata;
-    fabricObjectData.src = image.dataUrl;
-    // TODO: See if there's benefit of doing this all in a batch
-    util.enlivenObjects([fabricObjectData]).then(([object]) => {
-      const fabricImage = object as FabricImage;
-      augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
-      loadFabricImageInCanvas(fabricCanvas, object as FabricImage);
-    });
+  const fabricObjectData = spreadItem.fabricjsMetadata;
+  fabricObjectData.src = image.dataUrl;
+  // TODO: See if there's benefit of doing this all in a batch
+  const [object] = await util.enlivenObjects([fabricObjectData]);
+  const fabricImage = object as FabricImage;
+  augmentFabricImageWithSpreadItemMetadata(fabricImage, spreadItem);
+  return fabricImage;
+}
+
+export async function addItemToCanvas(
+  fabricCanvas: Canvas,
+  spreadItem: SpreadItem,
+  image: JournalImage
+) {
+  const fabricImage = await getFabricImage(spreadItem, image);
+  loadFabricImageInCanvas(fabricCanvas, fabricImage);
 }
 
 /******

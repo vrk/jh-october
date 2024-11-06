@@ -1,10 +1,12 @@
 "use client";
 import React from "react";
 
-import { Canvas, Rect, FabricObject, util } from "fabric";
+import { Canvas, Rect, FabricObject, util, FabricImage } from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import {
   addItemToCanvas,
+  getFabricImage,
+  loadFabricImageInCanvas,
   setCanvasDimensionsToWindowSize,
   setCenterFromObject,
   zoomToFitDocument,
@@ -22,6 +24,13 @@ const DEFAULT_WIDTH_IN_INCHES = 8.5;
 const DEFAULT_HEIGHT_IN_INCHES = 11;
 const DEFAULT_DOC_WIDTH = DEFAULT_WIDTH_IN_INCHES * DEFAULT_PPI;
 const DEFAULT_DOC_HEIGHT = DEFAULT_HEIGHT_IN_INCHES * DEFAULT_PPI;
+
+const PRINT_MARGIN_IN_INCHES = 0.25;
+const PRINT_MARGIN = PRINT_MARGIN_IN_INCHES * DEFAULT_PPI;
+const SPACE_IN_BETWEEN_ROW_IN_INCHES = 0;
+const SPACE_IN_BETWEEN_ROWS = SPACE_IN_BETWEEN_ROW_IN_INCHES * DEFAULT_PPI;
+const SPACE_IN_BETWEEN_IMAGES_IN_INCHES = 0;
+const SPACE_IN_BETWEEN_IMAGES = SPACE_IN_BETWEEN_IMAGES_IN_INCHES * DEFAULT_PPI;
 
 type Props = {
   loadedImages: Array<JournalImage>;
@@ -74,7 +83,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       fill: "white",
       hoverCursor: "default",
     });
-    const newDocs = [...documentRectangles, newDocRect]
+    const newDocs = [...documentRectangles, newDocRect];
     setDocumentRectangles(newDocs);
     fabricCanvas.add(newDocRect);
     if (newDocs.length === 1) {
@@ -87,8 +96,132 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       newDocRect.setCoords();
     }
     fabricCanvas.requestRenderAll();
+    return newDocRect;
   }
 
+  type PrintImage = {
+    spreadItem: SpreadItem;
+    image: JournalImage;
+    fabricImage: FabricImage;
+  };
+  function sortImagesByHeightDescending(printImages: Array<PrintImage>) {
+    printImages.sort((a, b) => {
+      return (
+        b.fabricImage.getScaledHeight() - a.fabricImage.getScaledHeight()
+      );
+    });
+  }
+  async function createPrintImages() {
+    const printImages: Array<PrintImage> = [];
+    for (const spreadItem of allSpreadItems) {
+      const image = loadedImages.find(
+        (i) => i.isUsedBySpreadItemId == spreadItem.id
+      );
+      if (image === undefined) {
+        continue;
+      }
+      // TODO: convert to Promise.all
+      const fabricObject = await getFabricImage(spreadItem, image);
+      printImages.push({
+        spreadItem,
+        image,
+        fabricImage: fabricObject,
+      });
+    }
+    return printImages;
+  }
+
+  type PrintRow = {
+    printImages: Array<PrintImage>;
+    heightInPixels: number;
+    widthInPixels: number;
+  };
+
+  // PASS ONE:
+  // Following Best-Fit Decreasing Height (BFDH) algorithm for strip packing.
+  // BFDH packs the next item R (in non-increasing height) on the level, among those
+  // that can accommodate R, for which the residual horizontal space is the minimum.
+  // If no level can accommodate R, a new level is created.
+  async function layOutPhotosInRow(fabricCanvas: Canvas) {
+    const printImages = await createPrintImages();
+    sortImagesByHeightDescending(printImages);
+    const rows: Array<PrintRow> = [];
+    const maxRowWidth = DEFAULT_DOC_WIDTH - PRINT_MARGIN * 2;
+
+    const findRowForImage = (printImage: PrintImage) => {
+      let bestRow = null; 
+      let bestRowHeightDelta = null;
+      for (const row of rows) {
+        const imageWidth = printImage.fabricImage.getScaledWidth();
+        const imageHeight = printImage.fabricImage.getScaledHeight();
+        const newWidth = row.widthInPixels + imageWidth;
+        if (newWidth > maxRowWidth) {
+          continue;
+        }
+        const heightDelta = row.heightInPixels - imageHeight;
+        if (bestRowHeightDelta === null || heightDelta < bestRowHeightDelta) {
+          bestRow = row;
+          bestRowHeightDelta = heightDelta;
+        }
+      }
+      return bestRow;
+    }
+    for (const printImage of printImages) {
+      console.log(printImage.fabricImage.getScaledHeight());
+      // addItemToCanvas(fabricCanvas, printImage.spreadItem, printImage.image);
+      const row = findRowForImage(printImage);
+      if (row) {
+        // Update the row width
+        row.widthInPixels += printImage.fabricImage.getScaledWidth();
+      } else {
+        // Add a new row
+        const newPrintRow = {
+          printImages: [printImage],
+          heightInPixels: printImage.fabricImage.getScaledHeight(),
+          widthInPixels: printImage.fabricImage.getScaledWidth()
+        }
+        rows.push(newPrintRow);
+      }
+    }
+    return rows;
+  }
+
+  type PrintPage = {
+    rows: Array<PrintRow>;
+    heightInPixels: number;
+  }
+  // PASS TWO
+  // In the first phase, a strip packing is obtained by the FFDH algorithm. The second phase 
+  // adopts the First-Fit Decreasing (FFD) algorithm, which packs an item to the first bin
+  // that it fits or start a new bin otherwise.
+  function layOutRowsInPages(rows: Array<PrintRow>) {
+    const pages: Array<PrintPage> = [];
+    const maxPageHeight = DEFAULT_DOC_HEIGHT - PRINT_MARGIN * 2;
+    const findPageForRow = (row: PrintRow) => {
+      for (const page of pages) {
+        const newHeight = page.heightInPixels + row.heightInPixels;
+        if (newHeight > maxPageHeight) {
+          continue;
+        }
+        return page;
+      }
+      return null;
+    }
+    for (const row of rows) {
+      const page = findPageForRow(row);
+      if (page) {
+        page.rows.push(row);
+        page.heightInPixels += row.heightInPixels;
+      } else {
+        const newPage = {
+          rows: [row],
+          heightInPixels: row.heightInPixels
+        }
+        pages.push(newPage);
+      }
+    }
+    return pages;
+  }
 
 
   // Add Document to Fabric Canvas
@@ -96,18 +229,33 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     if (!fabricCanvas) {
       return;
     }
-    createNewDocument(fabricCanvas);
-    for (const spreadItem of allSpreadItems) {
-      const image = loadedImages.find(
-        (i) => i.isUsedBySpreadItemId === spreadItem.id
-      );
-      if (!image) {
-        throw new Error(
-          "assertion error -- all spread items should have a corresponding image"
-        );
+    layOutPhotosInRow(fabricCanvas).then(rows => {
+      const pages = layOutRowsInPages(rows);
+      for (const page of pages) {
+        const document = createNewDocument(fabricCanvas);
+        let left = document.left + PRINT_MARGIN;
+        let top = document.top + PRINT_MARGIN;
+        for (const row of page.rows) {
+          for (const printImage of row.printImages) {
+            printImage.fabricImage.left = left;
+            printImage.fabricImage.top = top;
+            loadFabricImageInCanvas(fabricCanvas, printImage.fabricImage);
+          }
+        }
       }
-      addItemToCanvas(fabricCanvas, spreadItem, image);
-    }
+
+    })
+    // for (const spreadItem of allSpreadItems) {
+    //   const image = loadedImages.find(
+    //     (i) => i.isUsedBySpreadItemId === spreadItem.id
+    //   );
+    //   if (!image) {
+    //     throw new Error(
+    //       "assertion error -- all spread items should have a corresponding image"
+    //     );
+    //   }
+    //   addItemToCanvas(fabricCanvas, spreadItem, image);
+    // }
     // Best-Fit Decreasing Height (BFDH) algorithm
     // BFDH packs the next item R (in non-increasing height) on the level, among those
     // that can accommodate R, for which the residual horizontal space is the minimum.
