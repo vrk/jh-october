@@ -14,7 +14,7 @@ function PhotoTray() {
   const { journalId, loadedImages, addLoadedImages } = React.useContext(JournalContext);
 
   const [selectedSortBy, setSelectedSortBy] =
-    React.useState<SortBy>("importTime");
+    React.useState<SortBy>("imageDateReversed");
 
   // TODO: Make this its own component
   let button = <></>;
