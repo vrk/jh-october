@@ -31,6 +31,7 @@ const SPACE_IN_BETWEEN_ROW_IN_INCHES = 0.1;
 const SPACE_IN_BETWEEN_ROWS = SPACE_IN_BETWEEN_ROW_IN_INCHES * DEFAULT_PPI;
 const SPACE_IN_BETWEEN_IMAGES_IN_INCHES = 0.1;
 const SPACE_IN_BETWEEN_IMAGES = SPACE_IN_BETWEEN_IMAGES_IN_INCHES * DEFAULT_PPI;
+const SPACE_BETWEEN_DOCS = 200;
 
 type Props = {
   loadedImages: Array<JournalImage>;
@@ -83,19 +84,6 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       fill: "white",
       hoverCursor: "default",
     });
-    const newDocs = [...documentRectangles, newDocRect];
-    setDocumentRectangles(newDocs);
-    fabricCanvas.add(newDocRect);
-    if (newDocs.length === 1) {
-      fabricCanvas.centerObject(newDocRect);
-      zoomToFitDocument(fabricCanvas, newDocRect);
-    } else if (documentRectangles.length > 1) {
-      const lastPage = documentRectangles[documentRectangles.length - 1];
-      newDocRect.setX(lastPage.getX());
-      newDocRect.setY(lastPage.getY() + 200 + newDocRect.height);
-      newDocRect.setCoords();
-    }
-    fabricCanvas.requestRenderAll();
     return newDocRect;
   }
 
@@ -164,7 +152,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       return bestRow;
     };
     for (const printImage of printImages) {
-      console.log(printImage.fabricImage.getScaledHeight());
+      console.log("height", printImage.fabricImage.getScaledHeight());
       // addItemToCanvas(fabricCanvas, printImage.spreadItem, printImage.image);
       const row = findRowForImage(printImage);
       if (row) {
@@ -227,21 +215,38 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
   async function layOutPhotos(fabricCanvas: Canvas) {
     const printImages = await createPrintImages();
     const rows = await layOutPhotosInRow(printImages);
+    const newDocs = [];
     const pages = layOutRowsInPages(rows);
     for (const page of pages) {
-      const document = createNewDocument(fabricCanvas);
-      let left = document.left + PRINT_MARGIN;
-      let top = document.top + PRINT_MARGIN;
+      const doc = createNewDocument(fabricCanvas);
+      newDocs.push(doc);
+      console.log(doc.left, doc.top);
+      if (newDocs.length === 1) {
+        // fabricCanvas.centerObject(doc);
+        zoomToFitDocument(fabricCanvas, doc);
+      } else if (newDocs.length > 1) {
+        const lastPage = newDocs[newDocs.length - 1];
+        doc.setX(lastPage.getX());
+        doc.setY(lastPage.getY() + lastPage.getScaledHeight() + SPACE_BETWEEN_DOCS)
+      }
+      fabricCanvas.add(doc);
+
+      let top = doc.top + PRINT_MARGIN;
       for (const row of page.rows) {
+        let left = doc.left + PRINT_MARGIN;
         for (const printImage of row.printImages) {
           printImage.fabricImage.left = left;
           printImage.fabricImage.top = top;
           loadFabricImageInCanvas(fabricCanvas, printImage.fabricImage);
-          left += printImage.fabricImage.getScaledWidth() + SPACE_IN_BETWEEN_IMAGES;
+          left +=
+            printImage.fabricImage.getScaledWidth() + SPACE_IN_BETWEEN_IMAGES;
         }
         top += row.heightInPixels + SPACE_IN_BETWEEN_ROWS;
       }
     }
+    fabricCanvas.requestRenderAll();
+    console.log(newDocs);
+    setDocumentRectangles(newDocs);
   }
 
   // Add Document to Fabric Canvas
