@@ -35,7 +35,7 @@ function PhotoTray() {
   return (
     <div className={style.container}>
       <DropdownSelect<SortBy>
-        defaultValue={"importTime"}
+        defaultValue={"imageDateReversed"}
         title={"Sort By"}
         value={selectedSortBy}
         onValueChanged={(value: SortBy) => {

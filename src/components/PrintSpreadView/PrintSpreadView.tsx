@@ -9,7 +9,6 @@ import PrintCanvas from "../PrintCanvas";
 function PrintSpreadView() {
   const {
     currentPrintPageId,
-    currentPrintItems,
     loadedImages,
     allSpreadItems,
     journalLoadedStatus
@@ -20,8 +19,6 @@ function PrintSpreadView() {
   return (
     <PrintCanvas
       key={currentPrintPageId}
-      currentPrintPageId={currentPrintPageId}
-      currentPrintItems={currentPrintItems}
       allSpreadItems={allSpreadItems}
       loadedImages={loadedImages}
     ></PrintCanvas>

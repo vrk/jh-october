@@ -241,7 +241,9 @@ async function getNumberOfPrintPagesForJournal(
   journalId: string
 ): Promise<number> {
   return new Promise(async (resolve, reject) => {
-    const journalIdIndex = printPageStore.index(PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME);
+    const journalIdIndex = printPageStore.index(
+      PRINT_PAGES_TO_JOURNAL_ID_INDEX_NAME
+    );
     const countRequest = journalIdIndex.count(IDBKeyRange.only(journalId));
 
     countRequest.onerror = () => {
@@ -599,21 +601,23 @@ export async function getAllSpreadItemsForJournal(
 
     const isInJournal = (cursor: IDBCursorWithValue) => {
       const result = allSpreads.find((spread) => {
-        return spread.id === cursor.value.spreadId
+        return spread.id === cursor.value.spreadId;
       });
       return result !== undefined;
     };
 
-    request.onsuccess = () =>  {
+    request.onsuccess = () => {
       const cursor = request.result;
-      if (cursor && isInJournal(cursor)) {
-        const spreadItem: SpreadItem = {
-          id: cursor.value.id,
-          spreadId: cursor.value.spreadId,
-          imageId: cursor.value.imageId,
-          fabricjsMetadata: cursor.value.fabricjsMetadata
-        };
-        allSpreadItems.push(spreadItem);
+      if (cursor) {
+        if (isInJournal(cursor)) {
+          const spreadItem: SpreadItem = {
+            id: cursor.value.id,
+            spreadId: cursor.value.spreadId,
+            imageId: cursor.value.imageId,
+            fabricjsMetadata: cursor.value.fabricjsMetadata,
+          };
+          allSpreadItems.push(spreadItem);
+        }
         cursor.continue();
       } else {
         resolve(allSpreadItems);
@@ -794,4 +798,3 @@ export async function deletePrintPage(printPageId: string) {
     };
   });
 }
-

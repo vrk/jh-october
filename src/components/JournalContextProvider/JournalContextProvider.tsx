@@ -157,6 +157,8 @@ const JournalContextProvider = ({
   };
 
   const initalizeContext = async () => {
+    console.log('initializing', journalId);
+
     // Get all the spreads
     const allSpreads = await database.getAllSpreadsForJournal(journalId);
     allSpreads.sort((a, b) => {
@@ -174,6 +176,7 @@ const JournalContextProvider = ({
       journalId
     );
     setAllSpreadItemsState([...allSpreadItems]);
+    console.log('allSpreadItems', allSpreadItems);
 
     // Now load all the images
     const loadedImages = await database.getImagesForJournalWithUsageInformation(
