@@ -121,7 +121,7 @@ function JournalCanvas({
         (spreadItem) => spreadItem.imageId === image.id
       );
       if (!spreadItem) {
-        throw new Error("assertion error");
+        throw new Error("assertion error, spread item should be within images");
       }
       addItemToCanvas(fabricCanvas, spreadItem, image);
     }

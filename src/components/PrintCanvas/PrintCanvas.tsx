@@ -1,7 +1,15 @@
 "use client";
 import React from "react";
 
-import { Canvas, Rect, FabricObject, util, FabricImage, ImageFormat, filters } from "fabric";
+import {
+  Canvas,
+  Rect,
+  FabricObject,
+  util,
+  FabricImage,
+  ImageFormat,
+  filters,
+} from "fabric";
 import { FabricContext } from "../FabricContextProvider";
 import {
   addItemToCanvas,
@@ -75,8 +83,6 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
   function createNewDocument(fabricCanvas: Canvas, count: number) {
     const newDocRect = new Rect({
       backgroundId: `${BACKGROUND_ID_VALUE}-${count}`,
-      stroke: "#4B624C",
-      strokeWidth: 10,
       selectable: false,
       hasControls: false,
       height: DEFAULT_DOC_HEIGHT,
@@ -108,6 +114,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       }
       // TODO: convert to Promise.all
       const fabricObject = await getFabricImage(spreadItem, image);
+      fabricObject.selectable = false;
       printImages.push({
         spreadItem,
         image,
@@ -152,7 +159,6 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       return bestRow;
     };
     for (const printImage of printImages) {
-      console.log("height", printImage.fabricImage.getScaledHeight());
       // addItemToCanvas(fabricCanvas, printImage.spreadItem, printImage.image);
       const row = findRowForImage(printImage);
       if (row) {
@@ -219,16 +225,17 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     const pages = layOutRowsInPages(rows);
     for (const page of pages) {
       const doc = createNewDocument(fabricCanvas, newDocs.length);
-      newDocs.push(doc);
-      console.log(doc.left, doc.top);
-      if (newDocs.length === 1) {
+      const lastPage = newDocs[newDocs.length - 1];
+      if (newDocs.length === 0) {
         // fabricCanvas.centerObject(doc);
         zoomToFitDocument(fabricCanvas, doc);
-      } else if (newDocs.length > 1) {
-        const lastPage = newDocs[newDocs.length - 1];
-        doc.setX(lastPage.getX());
-        doc.setY(lastPage.getY() + lastPage.getScaledHeight() + SPACE_BETWEEN_DOCS)
+      } else {
+        console.log('last page id', lastPage.backgroundId)
+        doc.left = lastPage.left;
+        doc.top = lastPage.top + lastPage.getScaledHeight() + SPACE_BETWEEN_DOCS;
+        console.log('top', doc.top);
       }
+      newDocs.push(doc);
       fabricCanvas.add(doc);
 
       let top = doc.top + PRINT_MARGIN;
@@ -237,7 +244,11 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
         for (const printImage of row.printImages) {
           printImage.fabricImage.left = left;
           printImage.fabricImage.top = top;
-          loadFabricImageInCanvas(fabricCanvas, printImage.fabricImage);
+          fabricCanvas.add(printImage.fabricImage);
+          fabricCanvas.bringObjectToFront(printImage.fabricImage);
+          const resizeFilter = new filters.Resize();
+          resizeFilter.resizeType = "lanczos";
+          printImage.fabricImage.applyFilters([resizeFilter]);
           left +=
             printImage.fabricImage.getScaledWidth() + SPACE_IN_BETWEEN_IMAGES;
         }
@@ -247,6 +258,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
     fabricCanvas.requestRenderAll();
     console.log(newDocs);
     setDocumentRectangles(newDocs);
+    console.log('length', newDocs.length);
   }
 
   // Add Document to Fabric Canvas
@@ -255,6 +267,7 @@ function PrintCanvas({ loadedImages, allSpreadItems }: Props) {
       return;
     }
     layOutPhotos(fabricCanvas);
+    console.log('laying out photos');
     // for (const spreadItem of allSpreadItems) {
     //   const image = loadedImages.find(
     //     (i) => i.isUsedBySpreadItemId === spreadItem.id
